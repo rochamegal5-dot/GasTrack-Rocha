@@ -13,11 +13,8 @@ import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
-
-// Clase para recibir la respuesta de Supabase (agregamos el nombre)
-@Serializable
-data class RepartidorResponse(val id: String, val nombre: String)
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class MainActivity : AppCompatActivity() {
 
@@ -76,14 +73,16 @@ class MainActivity : AppCompatActivity() {
 
         scope.launch(Dispatchers.IO) {
             try {
-                // Obtenemos todos los repartidores de Supabase
-                val result = SupabaseClient.client.postgrest["repartidores"].select().decodeList<RepartidorResponse>()
+                // Leemos la tabla como JSON para evitar errores de formato
+                val result = SupabaseClient.client.postgrest["repartidores"].select().decodeList<JsonObject>()
                 
-                // Buscamos en la app si hay alguno que contenga ese nombre (ignorando mayúsculas)
-                val encontrado = result.find { it.nombre.contains(nombre, ignoreCase = true) }
+                // Buscamos si hay alguno que contenga ese nombre
+                val encontrado = result.find { 
+                    it.containsKey("nombre") && it["nombre"]?.jsonPrimitive?.content?.contains(nombre, ignoreCase = true) == true
+                }
 
                 if (encontrado != null) {
-                    repartidorId = encontrado.id
+                    repartidorId = encontrado["id"]?.jsonPrimitive?.content ?: ""
                     
                     launch(Dispatchers.Main) {
                         tvStatus.text = "Repartidor encontrado. Solicitando permisos..."
@@ -94,14 +93,15 @@ class MainActivity : AppCompatActivity() {
                     launch(Dispatchers.Main) {
                         tvStatus.text = "GasTrack Rocha"
                         btnStartStop.isEnabled = true
-                        Toast.makeText(this@MainActivity, "Nombre no encontrado en el sistema", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MainActivity, "Nombre no encontrado", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
                 launch(Dispatchers.Main) {
                     tvStatus.text = "GasTrack Rocha"
                     btnStartStop.isEnabled = true
-                    Toast.makeText(this@MainActivity, "Error de conexión con el servidor", Toast.LENGTH_LONG).show()
+                    // ¡AHORA NOS MUESTRA EL ERROR REAL!
+                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
