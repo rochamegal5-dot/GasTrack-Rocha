@@ -16,9 +16,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         
-    - name: Configurar Gradle
-      uses: gradle/actions/setup-gradle@v3
-      
+    - name: Descargar Gradle y crear Wrapper
+      run: |
+        wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
+        unzip gradle-8.5-bin.zip
+        gradle-8.5/bin/gradle wrapper
+        chmod +x gradlew
+        
     - name: Compilar APK
       run: bash gradlew assembleDebug
       
