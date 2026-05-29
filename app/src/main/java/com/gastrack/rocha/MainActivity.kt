@@ -9,13 +9,23 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import io.github.jan.supabase.postgrest.postgrest
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+
+// Clase para recibir la respuesta de Supabase
+@Serializable
+data class RepartidorResponse(val id: String)
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var btnStartStop: Button
     private lateinit var tvStatus: TextView
-    private lateinit var etRepartidorId: EditText
+    private lateinit var etNombre: EditText
     private var repartidorId = ""
+    private val scope = CoroutineScope(Dispatchers.Main)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,11 +42,12 @@ class MainActivity : AppCompatActivity() {
         }
         layout.addView(tvStatus)
 
-        etRepartidorId = EditText(this).apply {
-            hint = "ID del repartidor (UUID de Supabase)"
+        // Cambiamos el campo para pedir el NOMBRE en lugar del ID
+        etNombre = EditText(this).apply {
+            hint = "Nombre del repartidor (ej: Carlos Méndez)"
             textSize = 14f
         }
-        layout.addView(etRepartidorId)
+        layout.addView(etNombre)
 
         btnStartStop = Button(this).apply {
             text = "Iniciar Seguimiento"
@@ -51,12 +62,48 @@ class MainActivity : AppCompatActivity() {
         if (LocationTrackingService.isRunning) {
             stopTracking()
         } else {
-            repartidorId = etRepartidorId.text.toString().trim()
-            if (repartidorId.isEmpty()) {
-                Toast.makeText(this, "Ingresá el ID del repartidor", Toast.LENGTH_SHORT).show()
+            val nombre = etNombre.text.toString().trim()
+            if (nombre.isEmpty()) {
+                Toast.makeText(this, "Ingresá tu nombre", Toast.LENGTH_SHORT).show()
                 return
             }
-            checkPermissionsAndStart()
+            buscarRepartidorEnSupabase(nombre)
+        }
+    }
+
+    private fun buscarRepartidorEnSupabase(nombre: String) {
+        tvStatus.text = "Buscando repartidor en el sistema..."
+        btnStartStop.isEnabled = false
+
+        scope.launch(Dispatchers.IO) {
+            try {
+                // Buscar en Supabase el repartidor por su nombre
+                val result = SupabaseClient.client.postgrest["repartidores"].select(
+                    filter = "nombre.eq.$nombre"
+                ).decodeList<RepartidorResponse>()
+
+                if (result.isNotEmpty()) {
+                    repartidorId = result.first().id
+                    
+                    launch(Dispatchers.Main) {
+                        tvStatus.text = "Repartidor encontrado. Solicitando permisos..."
+                        btnStartStop.isEnabled = true
+                        checkPermissionsAndStart()
+                    }
+                } else {
+                    launch(Dispatchers.Main) {
+                        tvStatus.text = "GasTrack Rocha"
+                        btnStartStop.isEnabled = true
+                        Toast.makeText(this@MainActivity, "Nombre no encontrado en el sistema", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                launch(Dispatchers.Main) {
+                    tvStatus.text = "GasTrack Rocha"
+                    btnStartStop.isEnabled = true
+                    Toast.makeText(this@MainActivity, "Error de conexión con el servidor", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
