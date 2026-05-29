@@ -16,6 +16,10 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         
+    - name: Aceptar licencias de Android SDK
+      run: |
+        yes | sdkmanager --licenses || true
+        
     - name: Descargar Gradle y crear Wrapper
       run: |
         wget https://services.gradle.org/distributions/gradle-8.5-bin.zip
@@ -23,8 +27,8 @@ jobs:
         gradle-8.5/bin/gradle wrapper
         chmod +x gradlew
         
-    - name: Compilar APK
-      run: bash gradlew assembleDebug
+    - name: Compilar APK (con reporte de errores)
+      run: bash gradlew assembleDebug --stacktrace
       
     - name: Subir APK generado
       uses: actions/upload-artifact@v4
