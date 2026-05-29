@@ -78,9 +78,10 @@ class MainActivity : AppCompatActivity() {
         scope.launch(Dispatchers.IO) {
             try {
                 // Buscar en Supabase el repartidor por su nombre
-                val result = SupabaseClient.client.postgrest["repartidores"].select(
-                    filter = "nombre.eq.$nombre"
-                ).decodeList<RepartidorResponse>()
+               val result = SupabaseClient.client.postgrest["repartidores"].select {
+                    eq("nombre", nombre)
+                }.decodeList<RepartidorResponse>()
+                
 
                 if (result.isNotEmpty()) {
                     repartidorId = result.first().id
