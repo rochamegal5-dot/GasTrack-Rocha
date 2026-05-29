@@ -15,9 +15,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-// Clase para recibir la respuesta de Supabase
+// Clase para recibir la respuesta de Supabase (agregamos el nombre)
 @Serializable
-data class RepartidorResponse(val id: String)
+data class RepartidorResponse(val id: String, val nombre: String)
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,9 +42,8 @@ class MainActivity : AppCompatActivity() {
         }
         layout.addView(tvStatus)
 
-        // Cambiamos el campo para pedir el NOMBRE en lugar del ID
         etNombre = EditText(this).apply {
-            hint = "Nombre del repartidor (ej: Carlos Méndez)"
+            hint = "Nombre del repartidor (ej: Carlos)"
             textSize = 14f
         }
         layout.addView(etNombre)
@@ -77,14 +76,14 @@ class MainActivity : AppCompatActivity() {
 
         scope.launch(Dispatchers.IO) {
             try {
-                // Buscar en Supabase el repartidor por su nombre
-               val result = SupabaseClient.client.postgrest["repartidores"].select {
-                    eq("nombre", nombre)
-                }.decodeList<RepartidorResponse>()
+                // Obtenemos todos los repartidores de Supabase
+                val result = SupabaseClient.client.postgrest["repartidores"].select().decodeList<RepartidorResponse>()
                 
+                // Buscamos en la app si hay alguno que contenga ese nombre (ignorando mayúsculas)
+                val encontrado = result.find { it.nombre.contains(nombre, ignoreCase = true) }
 
-                if (result.isNotEmpty()) {
-                    repartidorId = result.first().id
+                if (encontrado != null) {
+                    repartidorId = encontrado.id
                     
                     launch(Dispatchers.Main) {
                         tvStatus.text = "Repartidor encontrado. Solicitando permisos..."
