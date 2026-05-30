@@ -91,9 +91,17 @@ class LocationTrackingService : Service() {
         stopSelf()
     }
 
-    private fun uploadLocation(location: Location) {
+    
+
+                    private fun uploadLocation(location: Location) {
+        // FILTRO DE PRECISIÓN: Si la precisión es peor a 20 metros, ignoramos el dato
+        if (location.accuracy > 20f) {
+            return
+        }
+
         serviceScope.launch {
             try {
+                val speed = if (location.hasSpeed() && location.speed > 0) location.speed.toDouble()
                 val speed = if (location.hasSpeed() && location.speed > 0) location.speed.toDouble()
                 else if (lastUploadedLocation != null) {
                     val distance = location.distanceTo(lastUploadedLocation!!)
