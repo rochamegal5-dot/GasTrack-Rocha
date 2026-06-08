@@ -5,106 +5,23 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.widget.*
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import io.github.jan.supabase.postgrest.postgrest
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var btnStartStop: Button
-    private lateinit var tvStatus: TextView
-    private lateinit var etNombre: EditText
+    private lateinit var webView: WebView
     private var repartidorId = ""
-    private val scope = CoroutineScope(Dispatchers.Main)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(48, 96, 48, 48)
-        }
-
-        tvStatus = TextView(this).apply {
-            text = "GasTrack Rocha - Seguimiento GPS"
-            textSize = 20f
-            setPadding(0, 0, 0, 48)
-        }
-        layout.addView(tvStatus)
-
-        etNombre = EditText(this).apply {
-            hint = "Nombre del repartidor (ej: Carlos)"
-            textSize = 14f
-        }
-        layout.addView(etNombre)
-
-        btnStartStop = Button(this).apply {
-            text = "Iniciar Seguimiento"
-            setOnClickListener { toggleTracking() }
-        }
-        layout.addView(btnStartStop)
-
-        setContentView(layout)
-    }
-
-    private fun toggleTracking() {
-        if (LocationTrackingService.isRunning) {
-            stopTracking()
-        } else {
-            val nombre = etNombre.text.toString().trim()
-            if (nombre.isEmpty()) {
-                Toast.makeText(this, "Ingresá tu nombre", Toast.LENGTH_SHORT).show()
-                return
-            }
-            buscarRepartidorEnSupabase(nombre)
-        }
-    }
-
-    private fun buscarRepartidorEnSupabase(nombre: String) {
-        tvStatus.text = "Buscando repartidor en el sistema..."
-        btnStartStop.isEnabled = false
-
-        scope.launch(Dispatchers.IO) {
-            try {
-                // Leemos la tabla como JSON para evitar errores de formato
-                val result = SupabaseClient.client.postgrest["repartidores"].select().decodeList<JsonObject>()
-                
-                // Buscamos si hay alguno que contenga ese nombre
-                val encontrado = result.find { 
-                    it.containsKey("nombre") && it["nombre"]?.jsonPrimitive?.content?.contains(nombre, ignoreCase = true) == true
-                }
-
-                if (encontrado != null) {
-                    repartidorId = encontrado["id"]?.jsonPrimitive?.content ?: ""
-                    
-                    launch(Dispatchers.Main) {
-                        tvStatus.text = "Repartidor encontrado. Solicitando permisos..."
-                        btnStartStop.isEnabled = true
-                        checkPermissionsAndStart()
-                    }
-                } else {
-                    launch(Dispatchers.Main) {
-                        tvStatus.text = "GasTrack Rocha"
-                        btnStartStop.isEnabled = true
-                        Toast.makeText(this@MainActivity, "Nombre no encontrado", Toast.LENGTH_LONG).show()
-                    }
-                }
-            } catch (e: Exception) {
-                launch(Dispatchers.Main) {
-                    tvStatus.text = "GasTrack Rocha"
-                    btnStartStop.isEnabled = true
-                    // ¡AHORA NOS MUESTRA EL ERROR REAL!
-                    Toast.makeText(this@MainActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
+        // 1. Pedir permisos primero (GPS, Notificaciones, etc.)
+        checkPermissionsAndStart()
     }
 
     private fun checkPermissionsAndStart() {
@@ -128,39 +45,42 @@ class MainActivity : AppCompatActivity() {
         if (needed.isNotEmpty()) {
             ActivityCompat.requestPermissions(this, needed.toTypedArray(), 100)
         } else {
-            startTracking()
+            // Si ya tenemos los permisos, iniciamos la interfaz
+            setupWebView()
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100 && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-            startTracking()
-        } else {
-            Toast.makeText(this, "Permisos necesarios para funcionar", Toast.LENGTH_LONG).show()
+        if (requestCode == 100) {
+            // Sean o no concedidos, iniciamos la vista. El GPS Fallará si no hay permisos, pero la app arranca.
+            setupWebView()
         }
     }
 
-    private fun startTracking() {
-        val intent = Intent(this, LocationTrackingService::class.java).apply {
+    private fun setupWebView() {
+        webView = WebView(this)
+        webView.settings.javaScriptEnabled = true // Vital para que Supabase y Tailwind funcionen
+        webView.settings.domStorageEnabled = true // Vital para el localStorage (que recuerde el login)
+        webView.webViewClient = WebViewClient() // Para que abra los links dentro de la app y no en Chrome
+        
+        // Cargamos nuestro archivo HTML desde la carpeta assets
+        webView.loadUrl("file:///android_asset/index.html")
+        
+        setContentView(webView)
+    }
+
+    // Mantenemos esto por si necesitamos iniciar el servicio desde la web en el futuro
+    fun startGpsService(id: String) {
+        repartidorId = id
+        val serviceIntent = Intent(this, LocationTrackingService::class.java).apply {
             action = LocationTrackingService.ACTION_START
             putExtra(LocationTrackingService.EXTRA_REPARTIDOR_ID, repartidorId)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
+            startForegroundService(serviceIntent)
         } else {
-            startService(intent)
+            startService(serviceIntent)
         }
-        btnStartStop.text = "Detener Seguimiento"
-        tvStatus.text = "Seguimiento activo"
-    }
-
-    private fun stopTracking() {
-        val intent = Intent(this, LocationTrackingService::class.java).apply {
-            action = LocationTrackingService.ACTION_STOP
-        }
-        startService(intent)
-        btnStartStop.text = "Iniciar Seguimiento"
-        tvStatus.text = "Seguimiento detenido"
     }
 }
