@@ -36,14 +36,100 @@
         </div>
     </div>
 
-    <!-- 3. TRABAJO (Solo la estructura por ahora) -->
+    <!-- 3. TRABAJO -->
     <div id="pantallaTrabajo" style="display: none;" class="max-w-lg mx-auto">
         <div class="bg-blue-900 text-white p-3 sticky top-0 z-50 shadow-lg flex justify-between items-center">
             <h2 class="text-lg font-bold" id="nombreRepartidorTop">Repartidor</h2>
             <button onclick="mostrarPantallaCierre()" class="bg-orange-500 px-4 py-2 rounded-lg text-sm font-bold cursor-pointer shadow">Caja / Cierre</button>
         </div>
+
+        <!-- MÓDULO 1: VENTAS -->
         <div id="moduloVentas" class="p-4 space-y-4">
-            <p class="text-center text-gray-500 font-bold mt-10">Módulo de Ventas en construcción...</p>
+            
+            <!-- STOCK EN CAMIONETA -->
+            <div class="bg-indigo-100 p-3 rounded-xl shadow-sm border-l-4 border-indigo-500">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-xs font-bold text-indigo-800">STOCK EN MI CAMIONETA</p>
+                    <button onclick="abrirRecarga()" class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-bold cursor-pointer">+ Recarga</button>
+                </div>
+                <div id="stockGridUI" class="grid grid-cols-3 gap-2"></div>
+            </div>
+
+            <!-- RECARGA -->
+            <div id="seccionRecarga" style="display: none;" class="bg-blue-50 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <h3 class="font-bold text-blue-800 mb-2">Carga desde Depósito</h3>
+                <p class="text-xs text-blue-600 mb-2">Devolvés vacías y sacás llenas.</p>
+                <div id="contenedorRecarga" class="space-y-2 mb-3"></div>
+                <div class="flex gap-2">
+                    <button onclick="registrarRecarga()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold cursor-pointer">Confirmar</button>
+                    <button onclick="cerrarRecarga()" class="flex-1 bg-gray-400 text-white py-2 rounded-lg font-bold cursor-pointer">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- REGISTRAR VENTA -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
+                <h3 class="font-bold text-gray-800 mb-3 text-lg">Registrar Venta</h3>
+                <div class="space-y-3">
+                    <select id="ventaTipoCliente" onchange="actualizarGarrafas()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold bg-blue-50 cursor-pointer">
+                        <option value="">-- Tipo de Cliente --</option>
+                        <option value="particular">Particular</option>
+                        <option value="particular_mides">Particular Mides</option>
+                        <option value="comercio">Comercio</option>
+                        <option value="comercio_mides">Comercio Mides</option>
+                    </select>
+                    
+                    <!-- BÚSQUEDA DE COMERCIO -->
+                    <div id="seccionClienteComercio" style="display: none;">
+                        <input type="text" id="inputClienteNombre" list="lista-comercios" placeholder="Escriba nombre del comercio..." class="block w-full px-3 py-3 border-2 border-purple-300 rounded-lg text-sm font-bold bg-purple-50 cursor-text" oninput="seleccionarCliente()">
+                        <datalist id="lista-comercios"></datalist>
+                        <input type="hidden" id="inputClienteId" value="">
+                    </div>
+
+                    <!-- AVISO DE FLETE AUTOMÁTICO -->
+                    <div id="seccionFlete" style="display: none;" class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400 text-center">
+                        <p class="text-xs font-bold text-blue-800">🚚 Incluye Flete de Reparto</p>
+                        <p class="text-2xl font-black text-blue-700" id="textoFleteAuto">$0</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <select id="ventaTipoGarrafa" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer">
+                            <option value="">-- Producto --</option>
+                        </select>
+                        <input type="number" id="ventaCantidad" value="1" min="1" step="1" oninput="calcularPrecioVenta()" onblur="arreglarCantidad()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm text-center font-black">
+                    </div>
+
+                    <select id="ventaModoVenta" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold cursor-pointer bg-green-50">
+                        <option value="intercambio">🔄 Intercambio (Devuelve vacía)</option>
+                        <option value="envase_gas">🛒 Envase + Gas (No devuelve)</option>
+                        <option value="cambio_falla">🔄 Cambio / Falla ($0)</option>
+                    </select>
+
+                    <div class="bg-gray-100 p-4 rounded-lg border-2 border-dashed border-gray-300 text-center">
+                        <p class="text-xs text-gray-500 font-bold mb-1">TOTAL A COBRAR</p>
+                        <p class="text-4xl font-black text-green-700" id="ventaTotalPantalla">$0</p>
+                    </div>
+
+                    <input type="hidden" id="ventaPrecioBaseOculto" value="0">
+                    <input type="hidden" id="ventaTotalOculto" value="0">
+
+                    <select id="ventaModalidad" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer">
+                        <option value="Efectivo">💵 Efectivo</option>
+                        <option value="Transferencia">📱 Transferencia</option>
+                        <option value="Tarjeta">💳 Tarjeta</option>
+                        <option value="Pago en el local">🏦 Pago en el local</option>
+                    </select>
+
+                    <button onclick="registrarVenta()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer shadow-lg">Confirmar Venta</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MÓDULO 2: CAJA Y CIERRE -->
+        <div id="moduloCierre" style="display: none;" class="p-4 space-y-4">
+            <button onclick="mostrarPantallaVentas()" class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 flex items-center justify-center">
+                <span class="mr-2">⬅</span> Volver a Ventas
+            </button>
+            <p class="text-center text-gray-500 text-sm">Módulo de cierre en construcción...</p>
         </div>
     </div>
 
@@ -54,12 +140,32 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let repartidorActual = { id: '', nombre: '' };
-        let productosCamioneta = []; // Guardará los productos 11, 13 y 45
+        let productosCamioneta = [];
+        let clientesCache = [];
+        let fleteConfigurado = 0; // Variable global para el flete
 
         document.addEventListener('DOMContentLoaded', async () => {
             await cargarRepartidoresLogin();
+            await cargarFlete(); // Cargamos el flete al inicio
             verificarSesionPrevia();
         });
+
+        function hablar(mensaje) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(mensaje);
+                utterance.lang = 'es-UY';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // FUNCIÓN NUEVA: Cargar flete desde Supabase
+        async function cargarFlete() {
+            const { data, error } = await supabaseClient.from('configuraciones').select('valor').eq('clave', 'flete_reparto').maybeSingle();
+            if (data) {
+                fleteConfigurado = parseFloat(data.valor) || 0;
+            }
+            document.getElementById('textoFleteAuto').textContent = "$" + fleteConfigurado.toLocaleString('es-UY');
+        }
 
         // ==========================================
         // MÓDULO LOGIN
@@ -68,7 +174,7 @@
             const select = document.getElementById('selectRepartidor');
             select.innerHTML = '<option value="">Cargando...</option>';
             const { data, error } = await supabaseClient.from('repartidores').select('*').eq('activo', true).order('nombre');
-            if (error) { select.innerHTML = '<option value="">Error al cargar</option>'; return; }
+            if (error) { select.innerHTML = '<option value="">Error</option>'; return; }
             select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
             data.forEach(rep => {
                 const option = document.createElement('option');
@@ -82,7 +188,6 @@
             const select = document.getElementById('selectRepartidor');
             const repId = select.value;
             if (!repId) { alert('Por favor, seleccioná tu nombre.'); return; }
-            
             repartidorActual.id = repId;
             repartidorActual.nombre = select.options[select.selectedIndex].text;
             localStorage.setItem('rep_id', repartidorActual.id);
@@ -92,7 +197,6 @@
             document.getElementById('pantallaInicioJornada').style.display = 'flex';
             document.getElementById('nombreRepartidorTop').textContent = repartidorActual.nombre;
             document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
             cargarDatosJornada();
         }
 
@@ -100,19 +204,16 @@
             const repId = localStorage.getItem('rep_id');
             const repNombre = localStorage.getItem('rep_nombre');
             const jornadaActiva = localStorage.getItem('jornada_activa');
-            
             if (repId && repNombre) {
                 repartidorActual.id = repId;
                 repartidorActual.nombre = repNombre;
                 document.getElementById('nombreRepartidorTop').textContent = repNombre;
-                
                 if(jornadaActiva === 'true') {
-                    // Si ya había iniciado jornada, vamos directo a vender
                     document.getElementById('pantallaLogin').style.display = 'none';
                     document.getElementById('pantallaInicioJornada').style.display = 'none';
                     document.getElementById('pantallaTrabajo').style.display = 'block';
+                    inicializarPantallaTrabajo();
                 } else {
-                    // Si no había iniciado jornada, vamos a la pantalla de carga
                     document.getElementById('pantallaLogin').style.display = 'none';
                     document.getElementById('pantallaInicioJornada').style.display = 'flex';
                     document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -126,118 +227,311 @@
         // ==========================================
         async function cargarDatosJornada() {
             const contenedor = document.getElementById('contenedorStockInicial');
-            contenedor.innerHTML = '<p class="col-span-3 text-center text-xs">Cargando productos...</p>';
-
-            // Traer solo los productos que usa la camioneta
-            const { data, error } = await supabaseClient
-                .from('productos')
-                .select('*')
-                .in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45'])
-                .order('nombre');
-
-            if (error || !data || data.length === 0) {
-                contenedor.innerHTML = '<p class="col-span-3 text-red-500 text-xs text-center">Error: No hay productos 11, 13 o 45kg en el sistema.</p>';
-                return;
-            }
-
+            contenedor.innerHTML = '<p class="col-span-3 text-center text-xs">Cargando...</p>';
+            const { data, error } = await supabaseClient.from('productos').select('*').in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45']).order('nombre');
+            if (error || !data) { contenedor.innerHTML = '<p class="col-span-3 text-red-500 text-xs">Error</p>'; return; }
             productosCamioneta = data;
             contenedor.innerHTML = '';
-
             productosCamioneta.forEach(prod => {
                 const div = document.createElement('div');
                 div.className = 'bg-gray-100 p-2 rounded-lg text-center';
-                div.innerHTML = `
-                    <label class="block text-xs font-bold text-gray-700 mb-1">${prod.nombre.replace('Garrafa ', '').replace('Tubo ', '')}</label>
-                    <input type="number" id="stockInicial_${prod.id}" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">
-                `;
+                div.innerHTML = `<label class="block text-xs font-bold text-gray-700 mb-1">${prod.nombre}</label><input type="number" id="stockInicial_${prod.id}" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">`;
                 contenedor.appendChild(div);
             });
         }
 
         async function registrarInicioJornada() {
             const kmInicio = document.getElementById('inputKmInicio').value;
-            if (!kmInicio || parseInt(kmInicio) <= 0) {
-                alert('Ingresá los KM del vehículo.');
-                return;
-            }
-
+            if (!kmInicio || parseInt(kmInicio) <= 0) { alert('Ingresá los KM del vehículo.'); return; }
             localStorage.setItem('km_inicio', kmInicio);
 
-            // 1. Verificar stock en depósito antes de sacar nada
-            const { data: stockDeposito, error: errStock } = await supabaseClient
-                .from('stock_deposito')
-                .select('producto_id, llenas')
-                .in('producto_id', productosCamioneta.map(p => p.id));
-
-            if (errStock) {
-                alert('Error al verificar stock en depósito central.');
-                return;
-            }
-
+            const { data: stockDeposito } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
             let cargaValida = true;
             let movimientos = [];
 
             for (const prod of productosCamioneta) {
                 const inputCant = parseInt(document.getElementById(`stockInicial_${prod.id}`).value) || 0;
                 const stockDisponible = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
-
-                if (inputCant > stockDisponible) {
-                    alert(`Stock insuficiente en depósito para ${prod.nombre}. Solo hay ${stockDisponible} llenas.`);
-                    cargaValida = false;
-                    break;
-                }
-
-                if (inputCant > 0) {
-                    movimientos.push({
-                        producto_id: prod.id,
-                        cantidad: inputCant
-                    });
-                }
+                if (inputCant > stockDisponible) { alert(`Stock insuficiente en depósito para ${prod.nombre}. Hay ${stockDisponible}.`); cargaValida = false; break; }
+                if (inputCant > 0) movimientos.push({ producto_id: prod.id, cantidad: inputCant });
             }
 
             if (!cargaValida) return;
 
-            // 2. Procesar movimientos (Restar del depósito, Sumar a la camioneta)
             try {
                 for (const mov of movimientos) {
-                    // A) Restar del Depósito Central (- Llenas)
-                    const { error: errDep } = await supabaseClient.rpc('modificar_stock_deposito', {
-                        p_producto_id: mov.producto_id,
-                        p_llenas: -mov.cantidad,
-                        p_vacias: 0,
-                        p_defectuosas: 0
-                    });
-                    if (errDep) throw new Error('Error descontando del depósito: ' + errDep.message);
-
-                    // B) Sumar a la Camioneta (+ Llenas)
-                    const { error: errCam } = await supabaseClient.rpc('modificar_stock_camioneta', {
-                        p_repartidor_id: repartidorActual.id,
-                        p_producto_id: mov.producto_id,
-                        p_llenas: mov.cantidad,
-                        p_vacias: 0
-                    });
-                    if (errCam) throw new Error('Error sumando a la camioneta: ' + errCam.message);
-
-                    // C) Auditar el movimiento
-                    await supabaseClient.from('movimientos_stock').insert({
-                        tipo_mov: 'carga_camioneta',
-                        producto_id: mov.producto_id,
-                        repartidor_id: repartidorActual.id,
-                        llenas: -mov.cantidad, // Negativo porque sale del depósito general
-                        observaciones: 'Carga inicial de camioneta - Repartidor: ' + repartidorActual.nombre
-                    });
+                    await supabaseClient.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
+                    await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
+                    await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'carga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: -mov.cantidad, observaciones: 'Carga inicial' });
                 }
-
-                // 3. Éxito -> Pasar a la pantalla de Trabajo
-                alert('¡Jornada iniciada y stock cargado correctamente!');
+                hablar("Jornada iniciada. Buen trabajo!");
                 localStorage.setItem('jornada_activa', 'true');
                 document.getElementById('pantallaInicioJornada').style.display = 'none';
                 document.getElementById('pantallaTrabajo').style.display = 'block';
-
+                inicializarPantallaTrabajo();
             } catch (e) {
-                alert('Ocurrió un error al cargar el stock: ' + e.message);
+                alert('Error al cargar el stock: ' + e.message);
             }
         }
+
+        // ==========================================
+        // MÓDULO TRABAJO - STOCK, RECARGA Y VENTAS
+        // ==========================================
+        async function inicializarPantallaTrabajo() {
+            await cargarStockCamionetaUI();
+            await cargarSelectsVentas();
+        }
+
+        async function cargarStockCamionetaUI() {
+            const grid = document.getElementById('stockGridUI');
+            grid.innerHTML = '';
+            const { data: stock } = await supabaseClient.from('stock_camioneta').select('*, productos(nombre)').eq('repartidor_id', repartidorActual.id);
+            let htmlGrid = '';
+            productosCamioneta.forEach(prod => {
+                const item = stock?.find(s => s.producto_id === prod.id);
+                const llenas = item ? item.llenas : 0;
+                const vacias = item ? item.vacias : 0;
+                const defect = item ? (item.defectuosas || 0) : 0;
+                htmlGrid += `
+                    <div class="bg-white p-2 rounded-lg text-center shadow-sm">
+                        <p class="text-[10px] font-bold text-gray-500 truncate">${prod.nombre.replace('Garrafa ', '')}</p>
+                        <p class="text-2xl font-black text-green-700">${llenas}</p>
+                        <p class="text-[10px] font-bold text-gray-400">Vac: ${vacias}</p>
+                        <p class="text-[10px] font-bold text-red-500">Def: ${defect}</p>
+                    </div>`;
+            });
+            grid.innerHTML = htmlGrid;
+        }
+
+        async function abrirRecarga() {
+            const seccion = document.getElementById('seccionRecarga');
+            const contenedor = document.getElementById('contenedorRecarga');
+            seccion.style.display = 'block';
+            contenedor.innerHTML = '';
+            const { data: stockCamioneta } = await supabaseClient.from('stock_camioneta').select('*').eq('repartidor_id', repartidorActual.id);
+
+            productosCamioneta.forEach(prod => {
+                const item = stockCamioneta?.find(s => s.producto_id === prod.id);
+                const vaciasActuales = item ? item.vacias : 0;
+                const defectActuales = item ? (item.defectuosas || 0) : 0;
+                const div = document.createElement('div');
+                div.className = 'grid grid-cols-3 gap-2 items-center bg-white p-2 rounded-lg border';
+                div.innerHTML = `
+                    <div class="col-span-1 font-bold text-sm text-gray-800">${prod.nombre.replace('Garrafa ', '')}</div>
+                    <div class="text-center">
+                        <label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label>
+                        <input type="number" id="recVac_${prod.id}" min="0" max="${vaciasActuales}" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold">
+                    </div>
+                    <div class="text-center">
+                        <label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label>
+                        <input type="number" id="recLlen_${prod.id}" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700">
+                    </div>`;
+                contenedor.appendChild(div);
+            });
+        }
+
+        function cerrarRecarga() { document.getElementById('seccionRecarga').style.display = 'none'; }
+
+        async function registrarRecarga() {
+            const { data: stockDeposito } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
+            let movimientos = []; let valido = true;
+            for (const prod of productosCamioneta) {
+                const vacEnt = parseInt(document.getElementById(`recVac_${prod.id}`).value) || 0;
+                const llenSac = parseInt(document.getElementById(`recLlen_${prod.id}`).value) || 0;
+                if (llenSac > 0) {
+                    const dispDep = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
+                    if (llenSac > dispDep) { alert(`No hay llenas en depósito para ${prod.nombre}. Solo hay ${dispDep}.`); valido = false; break; }
+                }
+                if (vacEnt > 0 || llenSac > 0) movimientos.push({ producto_id: prod.id, vacias_entregadas: vacEnt, llenas_sacadas: llenSac });
+            }
+            if (!valido) return;
+            try {
+                for (const mov of movimientos) {
+                    await supabaseClient.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.llenas_sacadas, p_vacias: mov.vacias_entregadas, p_defectuosas: 0 });
+                    await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.llenas_sacadas, p_vacias: -mov.vacias_entregadas, p_defectuosas: 0 });
+                    await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'recarga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: mov.llenas_sacadas, vacias: -mov.vacias_entregadas, observaciones: 'Recarga en depósito' });
+                }
+                hablar("Recarga exitosa");
+                cerrarRecarga();
+                cargarStockCamionetaUI();
+            } catch (e) { alert('Error en la recarga: ' + e.message); }
+        }
+
+        // ==========================================
+        // VENTAS
+        // ==========================================
+        async function cargarSelectsVentas() {
+            const selProd = document.getElementById('ventaTipoGarrafa');
+            selProd.innerHTML = '<option value="">-- Producto --</option>';
+            productosCamioneta.forEach(p => {
+                selProd.innerHTML += `<option value="${p.id}" data-precio="${p.precio_venta}">${p.nombre} - $${p.precio_venta}</option>`;
+            });
+
+            const { data: clientes } = await supabaseClient.from('clientes').select('*').ilike('tipo', '%comercio%').order('nombre');
+            const datalist = document.getElementById('lista-comercios');
+            datalist.innerHTML = '';
+            if (clientes) {
+                clientesCache = clientes;
+                clientes.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.nombre1 + ' ' + (c.apellido1 || '');
+                    option.dataset.id = c.id;
+                    datalist.appendChild(option);
+                });
+            }
+        }
+
+        function actualizarGarrafas() {
+            const tipo = document.getElementById('ventaTipoCliente').value;
+            const seccionComercio = document.getElementById('seccionClienteComercio');
+            const seccionFlete = document.getElementById('seccionFlete');
+
+            document.getElementById('inputClienteId').value = '';
+            document.getElementById('inputClienteNombre').value = '';
+
+            if (tipo === 'comercio' || tipo === 'comercio_mides') {
+                seccionComercio.style.display = 'block';
+                seccionFlete.style.display = 'none'; 
+            } else if (tipo === 'particular' || tipo === 'particular_mides') {
+                seccionComercio.style.display = 'none';
+                seccionFlete.style.display = 'block'; // Particulares ven el aviso de flete
+            } else {
+                seccionComercio.style.display = 'none';
+                seccionFlete.style.display = 'none';
+            }
+            calcularPrecioVenta(); 
+        }
+
+        function seleccionarCliente() {
+            const nombreIngresado = document.getElementById('inputClienteNombre').value;
+            const clienteEncontrado = clientesCache.find(c => (c.nombre1 + ' ' + (c.apellido1 || '')) === nombreIngresado);
+            if (clienteEncontrado) { document.getElementById('inputClienteId').value = clienteEncontrado.id; } 
+            else { document.getElementById('inputClienteId').value = ''; }
+        }
+
+        function calcularPrecioVenta() {
+            const prodSel = document.getElementById('ventaTipoGarrafa');
+            const precioBase = parseFloat(prodSel.options[prodSel.selectedIndex]?.dataset.precio || 0);
+            const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0;
+            const modo = document.getElementById('ventaModoVenta').value;
+            const tipoCliente = document.getElementById('ventaTipoCliente').value;
+
+            document.getElementById('ventaPrecioBaseOculto').value = precioBase;
+            let subtotal = 0;
+
+            if (modo === 'intercambio') {
+                subtotal = precioBase * cantidad;
+            } else if (modo === 'envase_gas') {
+                subtotal = precioBase * cantidad * 1.5;
+            } else if (modo === 'cambio_falla') {
+                subtotal = 0;
+            }
+
+            // LÓGICA AUTOMÁTICA DEL FLETE
+            let fleteAplicado = 0;
+            // Si es particular y NO es un cambio por falla, se suma el flete
+            if ((tipoCliente === 'particular' || tipoCliente === 'particular_mides') && modo !== 'cambio_falla') {
+                fleteAplicado = fleteConfigurado;
+            }
+
+            let total = subtotal + fleteAplicado;
+
+            document.getElementById('ventaTotalOculto').value = total;
+            document.getElementById('ventaTotalPantalla').textContent = "$" + total.toLocaleString('es-UY');
+        }
+
+        function arreglarCantidad() {
+            const input = document.getElementById('ventaCantidad');
+            if (!input.value || parseInt(input.value) < 1) input.value = 1;
+            calcularPrecioVenta();
+        }
+
+        async function registrarVenta() {
+            const prodId = document.getElementById('ventaTipoGarrafa').value;
+            const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0;
+            const modo = document.getElementById('ventaModoVenta').value;
+            const total = parseFloat(document.getElementById('ventaTotalOculto').value) || 0;
+            const metodoPago = document.getElementById('ventaModalidad').value;
+            const clienteId = document.getElementById('inputClienteId').value || null;
+            const tipoCliente = document.getElementById('ventaTipoCliente').value;
+
+            if (!tipoCliente) { alert('Seleccioná el tipo de cliente.'); return; }
+            if (!prodId || cantidad <= 0) { alert('Seleccioná un producto y cantidad.'); return; }
+
+            const { data: stockCam } = await supabaseClient.from('stock_camioneta').select('llenas').eq('repartidor_id', repartidorActual.id).eq('producto_id', prodId).maybeSingle();
+            const stockDisponible = stockCam ? stockCam.llenas : 0;
+            if (cantidad > stockDisponible) { alert(`No tenés suficientes garrafas. Solo tienes ${stockDisponible}.`); return; }
+
+            let vaciasRecibidas = 0;
+            let defectuosasRecibidas = 0;
+
+            if (modo === 'intercambio') { vaciasRecibidas = cantidad; } 
+            else if (modo === 'envase_gas') { vaciasRecibidas = 0; } 
+            else if (modo === 'cambio_falla') { defectuosasRecibidas = cantidad; }
+
+            const metodoPagoStr = metodoPago.toLowerCase().replace(' en el local', '');
+            
+            let obsVenta = 'Venta App - ' + modo + ' - Cliente: ' + tipoCliente;
+
+            const { data: ventaData, error: errorVenta } = await supabaseClient.from('ventas').insert({
+                origen: 'app',
+                tipo_venta: modo,
+                repartidor_id: repartidorActual.id,
+                cliente_id: clienteId,
+                producto_id: prodId,
+                cantidad_llenas: cantidad,
+                cantidad_vacias: vaciasRecibidas,
+                cantidad_defectuosas: defectuosasRecibidas,
+                total: total,
+                metodo_pago: metodoPagoStr,
+                estado: 'Cobrado'
+            }).select().single();
+
+            if (errorVenta) { alert('Error al registrar venta: ' + errorVenta.message); return; }
+
+            const { error: errorStock } = await supabaseClient.rpc('modificar_stock_camioneta', {
+                p_repartidor_id: repartidorActual.id,
+                p_producto_id: prodId,
+                p_llenas: -cantidad,
+                p_vacias: vaciasRecibidas,
+                p_defectuosas: defectuosasRecibidas
+            });
+
+            if (errorStock) { alert('Venta registrada pero error al actualizar camioneta: ' + errorStock.message); return; }
+
+            await supabaseClient.from('movimientos_stock').insert({
+                tipo_mov: 'venta_app',
+                producto_id: prodId,
+                repartidor_id: repartidorActual.id,
+                llenas: -cantidad,
+                vacias: vaciasRecibidas,
+                defectuosas: defectuosasRecibidas,
+                referencia_id: ventaData.id,
+                observaciones: obsVenta
+            });
+
+            hablar("Venta registrada");
+            
+            document.getElementById('ventaCantidad').value = 1;
+            document.getElementById('ventaModoVenta').value = 'intercambio';
+            document.getElementById('ventaTotalPantalla').textContent = "$0";
+            document.getElementById('inputClienteNombre').value = '';
+            document.getElementById('inputClienteId').value = '';
+            document.getElementById('ventaTipoCliente').value = '';
+            actualizarGarrafas();
+            
+            cargarStockCamionetaUI();
+        }
+
+        function mostrarPantallaCierre() {
+            document.getElementById('moduloVentas').style.display = 'none';
+            document.getElementById('moduloCierre').style.display = 'block';
+        }
+        function mostrarPantallaVentas() {
+            document.getElementById('moduloCierre').style.display = 'none';
+            document.getElementById('moduloVentas').style.display = 'block';
+        }
+
     </script>
 </body>
 </html>
