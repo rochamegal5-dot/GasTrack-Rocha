@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <link rel="manifest" href="manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>App Gas - Repartidor</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,20 +23,20 @@
         </div>
     </div>
 
-    <!-- 2. INICIO JORNADA (La trabajaremos en el próximo paso) -->
+    <!-- 2. INICIO JORNADA -->
     <div id="pantallaInicioJornada" style="display: none;" class="min-h-screen flex items-center justify-center bg-yellow-50 p-6">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-black text-center text-yellow-700 mb-4">Iniciar Jornada</h2>
             <p class="text-center text-sm mb-4" id="fechaHoy"></p>
             <label class="block text-xs font-bold text-gray-600 mb-1">KM del Vehiculo</label>
             <input type="number" id="inputKmInicio" class="block w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-xl text-center font-black mb-4" placeholder="Ej: 85430">
-            <p class="font-bold text-gray-800 mb-2">Stock Inicial (Llenas):</p>
+            <p class="font-bold text-gray-800 mb-2">Stock a Cargar (Llenas):</p>
             <div id="contenedorStockInicial" class="grid grid-cols-3 gap-2 mb-4"></div>
             <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer">EMPEZAR EL DIA</button>
         </div>
     </div>
 
-    <!-- 3. TRABAJO (La trabajaremos luego) -->
+    <!-- 3. TRABAJO (Solo la estructura por ahora) -->
     <div id="pantallaTrabajo" style="display: none;" class="max-w-lg mx-auto">
         <div class="bg-blue-900 text-white p-3 sticky top-0 z-50 shadow-lg flex justify-between items-center">
             <h2 class="text-lg font-bold" id="nombreRepartidorTop">Repartidor</h2>
@@ -55,12 +54,16 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let repartidorActual = { id: '', nombre: '' };
+        let productosCamioneta = []; // Guardará los productos 11, 13 y 45
 
         document.addEventListener('DOMContentLoaded', async () => {
             await cargarRepartidoresLogin();
             verificarSesionPrevia();
         });
 
+        // ==========================================
+        // MÓDULO LOGIN
+        // ==========================================
         async function cargarRepartidoresLogin() {
             const select = document.getElementById('selectRepartidor');
             select.innerHTML = '<option value="">Cargando...</option>';
@@ -89,18 +92,150 @@
             document.getElementById('pantallaInicioJornada').style.display = 'flex';
             document.getElementById('nombreRepartidorTop').textContent = repartidorActual.nombre;
             document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            cargarDatosJornada();
         }
 
         function verificarSesionPrevia() {
             const repId = localStorage.getItem('rep_id');
             const repNombre = localStorage.getItem('rep_nombre');
+            const jornadaActiva = localStorage.getItem('jornada_activa');
+            
             if (repId && repNombre) {
                 repartidorActual.id = repId;
                 repartidorActual.nombre = repNombre;
-                document.getElementById('pantallaLogin').style.display = 'none';
-                document.getElementById('pantallaInicioJornada').style.display = 'flex';
                 document.getElementById('nombreRepartidorTop').textContent = repNombre;
-                document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                
+                if(jornadaActiva === 'true') {
+                    // Si ya había iniciado jornada, vamos directo a vender
+                    document.getElementById('pantallaLogin').style.display = 'none';
+                    document.getElementById('pantallaInicioJornada').style.display = 'none';
+                    document.getElementById('pantallaTrabajo').style.display = 'block';
+                } else {
+                    // Si no había iniciado jornada, vamos a la pantalla de carga
+                    document.getElementById('pantallaLogin').style.display = 'none';
+                    document.getElementById('pantallaInicioJornada').style.display = 'flex';
+                    document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    cargarDatosJornada();
+                }
+            }
+        }
+
+        // ==========================================
+        // MÓDULO INICIO JORNADA
+        // ==========================================
+        async function cargarDatosJornada() {
+            const contenedor = document.getElementById('contenedorStockInicial');
+            contenedor.innerHTML = '<p class="col-span-3 text-center text-xs">Cargando productos...</p>';
+
+            // Traer solo los productos que usa la camioneta
+            const { data, error } = await supabaseClient
+                .from('productos')
+                .select('*')
+                .in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45'])
+                .order('nombre');
+
+            if (error || !data || data.length === 0) {
+                contenedor.innerHTML = '<p class="col-span-3 text-red-500 text-xs text-center">Error: No hay productos 11, 13 o 45kg en el sistema.</p>';
+                return;
+            }
+
+            productosCamioneta = data;
+            contenedor.innerHTML = '';
+
+            productosCamioneta.forEach(prod => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-100 p-2 rounded-lg text-center';
+                div.innerHTML = `
+                    <label class="block text-xs font-bold text-gray-700 mb-1">${prod.nombre.replace('Garrafa ', '').replace('Tubo ', '')}</label>
+                    <input type="number" id="stockInicial_${prod.id}" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">
+                `;
+                contenedor.appendChild(div);
+            });
+        }
+
+        async function registrarInicioJornada() {
+            const kmInicio = document.getElementById('inputKmInicio').value;
+            if (!kmInicio || parseInt(kmInicio) <= 0) {
+                alert('Ingresá los KM del vehículo.');
+                return;
+            }
+
+            localStorage.setItem('km_inicio', kmInicio);
+
+            // 1. Verificar stock en depósito antes de sacar nada
+            const { data: stockDeposito, error: errStock } = await supabaseClient
+                .from('stock_deposito')
+                .select('producto_id, llenas')
+                .in('producto_id', productosCamioneta.map(p => p.id));
+
+            if (errStock) {
+                alert('Error al verificar stock en depósito central.');
+                return;
+            }
+
+            let cargaValida = true;
+            let movimientos = [];
+
+            for (const prod of productosCamioneta) {
+                const inputCant = parseInt(document.getElementById(`stockInicial_${prod.id}`).value) || 0;
+                const stockDisponible = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
+
+                if (inputCant > stockDisponible) {
+                    alert(`Stock insuficiente en depósito para ${prod.nombre}. Solo hay ${stockDisponible} llenas.`);
+                    cargaValida = false;
+                    break;
+                }
+
+                if (inputCant > 0) {
+                    movimientos.push({
+                        producto_id: prod.id,
+                        cantidad: inputCant
+                    });
+                }
+            }
+
+            if (!cargaValida) return;
+
+            // 2. Procesar movimientos (Restar del depósito, Sumar a la camioneta)
+            try {
+                for (const mov of movimientos) {
+                    // A) Restar del Depósito Central (- Llenas)
+                    const { error: errDep } = await supabaseClient.rpc('modificar_stock_deposito', {
+                        p_producto_id: mov.producto_id,
+                        p_llenas: -mov.cantidad,
+                        p_vacias: 0,
+                        p_defectuosas: 0
+                    });
+                    if (errDep) throw new Error('Error descontando del depósito: ' + errDep.message);
+
+                    // B) Sumar a la Camioneta (+ Llenas)
+                    const { error: errCam } = await supabaseClient.rpc('modificar_stock_camioneta', {
+                        p_repartidor_id: repartidorActual.id,
+                        p_producto_id: mov.producto_id,
+                        p_llenas: mov.cantidad,
+                        p_vacias: 0
+                    });
+                    if (errCam) throw new Error('Error sumando a la camioneta: ' + errCam.message);
+
+                    // C) Auditar el movimiento
+                    await supabaseClient.from('movimientos_stock').insert({
+                        tipo_mov: 'carga_camioneta',
+                        producto_id: mov.producto_id,
+                        repartidor_id: repartidorActual.id,
+                        llenas: -mov.cantidad, // Negativo porque sale del depósito general
+                        observaciones: 'Carga inicial de camioneta - Repartidor: ' + repartidorActual.nombre
+                    });
+                }
+
+                // 3. Éxito -> Pasar a la pantalla de Trabajo
+                alert('¡Jornada iniciada y stock cargado correctamente!');
+                localStorage.setItem('jornada_activa', 'true');
+                document.getElementById('pantallaInicioJornada').style.display = 'none';
+                document.getElementById('pantallaTrabajo').style.display = 'block';
+
+            } catch (e) {
+                alert('Ocurrió un error al cargar el stock: ' + e.message);
             }
         }
     </script>
