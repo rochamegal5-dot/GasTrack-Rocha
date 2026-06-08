@@ -1,0 +1,108 @@
+<meta charset="UTF-8"><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App Gas - Repartidor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="pb-20">
+
+    <!-- 1. LOGIN -->
+    <div id="pantallaLogin" class="min-h-screen flex items-center justify-center bg-blue-900 p-6">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+            <h1 class="text-3xl font-black text-blue-800 mb-2">App Gas</h1>
+            <select id="selectRepartidor" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-lg font-bold text-center mb-4">
+                <option value="">Iniciando...</option>
+            </select>
+            <button onclick="iniciarSesion()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer">Ingresar</button>
+        </div>
+    </div>
+
+    <!-- 2. INICIO JORNADA (La trabajaremos en el próximo paso) -->
+    <div id="pantallaInicioJornada" style="display: none;" class="min-h-screen flex items-center justify-center bg-yellow-50 p-6">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h2 class="text-2xl font-black text-center text-yellow-700 mb-4">Iniciar Jornada</h2>
+            <p class="text-center text-sm mb-4" id="fechaHoy"></p>
+            <label class="block text-xs font-bold text-gray-600 mb-1">KM del Vehiculo</label>
+            <input type="number" id="inputKmInicio" class="block w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-xl text-center font-black mb-4" placeholder="Ej: 85430">
+            <p class="font-bold text-gray-800 mb-2">Stock Inicial (Llenas):</p>
+            <div id="contenedorStockInicial" class="grid grid-cols-3 gap-2 mb-4"></div>
+            <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer">EMPEZAR EL DIA</button>
+        </div>
+    </div>
+
+    <!-- 3. TRABAJO (La trabajaremos luego) -->
+    <div id="pantallaTrabajo" style="display: none;" class="max-w-lg mx-auto">
+        <div class="bg-blue-900 text-white p-3 sticky top-0 z-50 shadow-lg flex justify-between items-center">
+            <h2 class="text-lg font-bold" id="nombreRepartidorTop">Repartidor</h2>
+            <button onclick="mostrarPantallaCierre()" class="bg-orange-500 px-4 py-2 rounded-lg text-sm font-bold cursor-pointer shadow">Caja / Cierre</button>
+        </div>
+        <div id="moduloVentas" class="p-4 space-y-4">
+            <p class="text-center text-gray-500 font-bold mt-10">Módulo de Ventas en construcción...</p>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const SUPABASE_URL = 'https://plnodukthcnnwmxlzwsm.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsbm9kdWt0aGNubndteGx6d3NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTkwMTcsImV4cCI6MjA5NTYzNTAxN30.WkTzFvNiM0BotwTLtxzQpq9-b08stueIlsp8K0b9iq8';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let repartidorActual = { id: '', nombre: '' };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await cargarRepartidoresLogin();
+            verificarSesionPrevia();
+        });
+
+        async function cargarRepartidoresLogin() {
+            const select = document.getElementById('selectRepartidor');
+            select.innerHTML = '<option value="">Cargando...</option>';
+            const { data, error } = await supabaseClient.from('repartidores').select('*').eq('activo', true).order('nombre');
+            if (error) { select.innerHTML = '<option value="">Error al cargar</option>'; return; }
+            select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
+            data.forEach(rep => {
+                const option = document.createElement('option');
+                option.value = rep.id;
+                option.textContent = rep.nombre;
+                select.appendChild(option);
+            });
+        }
+
+        function iniciarSesion() {
+            const select = document.getElementById('selectRepartidor');
+            const repId = select.value;
+            if (!repId) { alert('Por favor, seleccioná tu nombre.'); return; }
+            
+            repartidorActual.id = repId;
+            repartidorActual.nombre = select.options[select.selectedIndex].text;
+            localStorage.setItem('rep_id', repartidorActual.id);
+            localStorage.setItem('rep_nombre', repartidorActual.nombre);
+
+            document.getElementById('pantallaLogin').style.display = 'none';
+            document.getElementById('pantallaInicioJornada').style.display = 'flex';
+            document.getElementById('nombreRepartidorTop').textContent = repartidorActual.nombre;
+            document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function verificarSesionPrevia() {
+            const repId = localStorage.getItem('rep_id');
+            const repNombre = localStorage.getItem('rep_nombre');
+            if (repId && repNombre) {
+                repartidorActual.id = repId;
+                repartidorActual.nombre = repNombre;
+                document.getElementById('pantallaLogin').style.display = 'none';
+                document.getElementById('pantallaInicioJornada').style.display = 'flex';
+                document.getElementById('nombreRepartidorTop').textContent = repNombre;
+                document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+        }
+    </script>
+</body>
+</html>
