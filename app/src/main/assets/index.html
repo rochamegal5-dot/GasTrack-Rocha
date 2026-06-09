@@ -156,7 +156,7 @@
         let productosCamioneta = [];
         let clientesCache = [];
         let fleteConfigurado = 0;
-        let jornadaActualId = null; // Guardaremos el ID de la jornada de Supabase
+        let jornadaActualId = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await cargarRepartidoresLogin();
@@ -218,7 +218,6 @@
                 document.getElementById('nombreRepartidorTop').textContent = repNombre;
                 
                 if(jornadaId) {
-                    // Si ya hay una jornada activa en la DB, vamos directo a trabajar
                     jornadaActualId = jornadaId;
                     document.getElementById('pantallaLogin').style.display = 'none';
                     document.getElementById('pantallaInicioJornada').style.display = 'none';
@@ -260,12 +259,15 @@
         }
 
         async function registrarInicioJornada() {
+            // ALERTA DE DIAGNÓSTICO 1: Confirmar que el botón fue presionado
+            alert("PASO 1: Botón presionado. Validando datos...");
+
             const kmInicio = document.getElementById('inputKmInicio').value;
             const vuelto = document.getElementById('inputVuelto').value;
 
             if (!kmInicio || parseInt(kmInicio) <= 0) { alert('Ingresá los KM del vehículo.'); return; }
             if (vuelto === "" || parseFloat(vuelto) < 0) { alert('Ingresá el vuelto inicial (puede ser 0).'); return; }
-            if (productosCamioneta.length === 0) { alert('No hay productos cargados para iniciar.'); return; }
+            if (productosCamioneta.length === 0) { alert('Error interno: No hay productos cargados.'); return; }
 
             let movimientos = [];
             let totalLlenas = 0;
@@ -283,7 +285,9 @@
             if (!confirm(`Confirmar inicio con ${totalLlenas} garrafas y $${parseFloat(vuelto).toLocaleString('es-UY')} de vuelto?`)) return;
 
             try {
-                // 1. CREAR LA JORNADA EN SUPABASE (Aquí se guarda el vuelto)
+                // ALERTA DE DIAGNÓSTICO 2: Conectando a Supabase
+                alert("PASO 2: Guardando jornada en Supabase...");
+
                 const { data: jornadaData, error: errJornada } = await supabaseClient.from('jornadas').insert({
                     repartidor_id: repartidorActual.id,
                     km_inicio: kmInicio,
@@ -291,12 +295,17 @@
                     activa: true
                 }).select().single();
 
-                if (errJornada) throw new Error('Error al crear jornada en BD: ' + errJornada.message);
+                if (errJornada) {
+                    alert("ERROR SUPABASE TABLA JORNADAS:\n" + errJornada.message + "\n\n¿Ejecutaste el SQL para crear la tabla 'jornadas'?");
+                    return;
+                }
                 
                 jornadaActualId = jornadaData.id;
                 localStorage.setItem('jornada_id', jornadaActualId);
 
-                // 2. Verificar Stock en Depósito
+                // ALERTA DE DIAGNÓSTICO 3: Verificando stock
+                alert("PASO 3: Jornada guardada. Verificando stock en depósito...");
+
                 const { data: stockDeposito, error: errStock } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', movimientos.map(m => m.producto_id));
                 if (errStock) throw new Error('Error leyendo stock: ' + errStock.message);
 
@@ -308,13 +317,21 @@
                     }
                 }
 
-                // 3. Procesar Movimientos
+                // ALERTA DE DIAGNÓSTICO 4: Moviendo stock
+                alert("PASO 4: Stock verificado. Procesando movimientos...");
+
                 for (const mov of movimientos) {
                     const resDep = await supabaseClient.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
-                    if (resDep.error) throw new Error('Error RPC Depósito: ' + resDep.error.message);
+                    if (resDep.error) {
+                        alert("ERROR RPC modificar_stock_deposito:\n" + resDep.error.message + "\n\n¿Ejecutaste el SQL de funciones RPC?");
+                        return;
+                    }
 
                     const resCam = await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
-                    if (resCam.error) throw new Error('Error RPC Camioneta: ' + resCam.error.message);
+                    if (resCam.error) {
+                        alert("ERROR RPC modificar_stock_camioneta:\n" + resCam.error.message + "\n\n¿Ejecutaste el SQL de funciones RPC?");
+                        return;
+                    }
 
                     await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'carga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: -mov.cantidad, observaciones: 'Carga inicial' });
                 }
@@ -325,8 +342,8 @@
                 inicializarPantallaTrabajo();
 
             } catch (e) {
-                console.error("ERROR INICIO JORNADA:", e);
-                alert('Error al iniciar jornada:\n' + e.message);
+                console.error("ERROR INICIO Jornada:", e);
+                alert("ERROR FATAL FUERA DE CONTROL:\n" + e.message);
             }
         }
 
@@ -394,133 +411,4 @@
             const tipo = document.getElementById('ventaTipoCliente').value; const seccionComercio = document.getElementById('seccionClienteComercio'); const seccionFlete = document.getElementById('seccionFlete');
             document.getElementById('inputClienteId').value = ''; document.getElementById('inputClienteNombre').value = '';
             if (tipo === 'comercio' || tipo === 'comercio_mides') { seccionComercio.style.display = 'block'; seccionFlete.style.display = 'none'; } 
-            else if (tipo === 'particular' || tipo === 'particular_mides') { seccionComercio.style.display = 'none'; seccionFlete.style.display = 'block'; } 
-            else { seccionComercio.style.display = 'none'; seccionFlete.style.display = 'none'; }
-            calcularPrecioVenta();
-        }
-        function seleccionarCliente() { const nombreIngresado = document.getElementById('inputClienteNombre').value; const clienteEncontrado = clientesCache.find(c => (c.nombre1 + ' ' + (c.apellido1 || '')) === nombreIngresado); if (clienteEncontrado) { document.getElementById('inputClienteId').value = clienteEncontrado.id; } else { document.getElementById('inputClienteId').value = ''; } }
-
-        function calcularPrecioVenta() {
-            const prodSel = document.getElementById('ventaTipoGarrafa'); const precioBase = parseFloat(prodSel.options[prodSel.selectedIndex]?.dataset.precio || 0);
-            const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0; const modo = document.getElementById('ventaModoVenta').value; const tipoCliente = document.getElementById('ventaTipoCliente').value;
-            document.getElementById('ventaPrecioBaseOculto').value = precioBase; let subtotal = 0;
-            if (modo === 'intercambio') { subtotal = precioBase * cantidad; } else if (modo === 'envase_gas') { subtotal = precioBase * cantidad * 1.5; } else if (modo === 'cambio_falla') { subtotal = 0; }
-            let fleteAplicado = 0;
-            if ((tipoCliente === 'particular' || tipoCliente === 'particular_mides') && modo !== 'cambio_falla') { fleteAplicado = fleteConfigurado; }
-            let total = subtotal + fleteAplicado;
-            document.getElementById('ventaTotalOculto').value = total; document.getElementById('ventaTotalPantalla').textContent = "$" + total.toLocaleString('es-UY');
-        }
-        function arreglarCantidad() { const input = document.getElementById('ventaCantidad'); if (!input.value || parseInt(input.value) < 1) input.value = 1; calcularPrecioVenta(); }
-
-        async function registrarVenta() {
-            const prodId = document.getElementById('ventaTipoGarrafa').value; const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0;
-            const modo = document.getElementById('ventaModoVenta').value; const total = parseFloat(document.getElementById('ventaTotalOculto').value) || 0;
-            const metodoPago = document.getElementById('ventaModalidad').value; const clienteId = document.getElementById('inputClienteId').value || null;
-            const tipoCliente = document.getElementById('ventaTipoCliente').value;
-            if (!tipoCliente) { alert('Seleccioná el tipo de cliente.'); return; }
-            if (!prodId || cantidad <= 0) { alert('Seleccioná un producto y cantidad.'); return; }
-            const { data: stockCam } = await supabaseClient.from('stock_camioneta').select('llenas').eq('repartidor_id', repartidorActual.id).eq('producto_id', prodId).maybeSingle();
-            const stockDisponible = stockCam ? stockCam.llenas : 0;
-            if (cantidad > stockDisponible) { alert(`No tenés suficientes garrafas. Solo tienes ${stockDisponible}.`); return; }
-            let vaciasRecibidas = 0; let defectuosasRecibidas = 0;
-            if (modo === 'intercambio') { vaciasRecibidas = cantidad; } else if (modo === 'envase_gas') { vaciasRecibidas = 0; } else if (modo === 'cambio_falla') { defectuosasRecibidas = cantidad; }
-            const metodoPagoStr = metodoPago.toLowerCase().replace(' en el local', '');
-            let obsVenta = 'Venta App - ' + modo + ' - Cliente: ' + tipoCliente;
-            const { data: ventaData, error: errorVenta } = await supabaseClient.from('ventas').insert({ origen: 'app', tipo_venta: modo, repartidor_id: repartidorActual.id, cliente_id: clienteId, producto_id: prodId, cantidad_llenas: cantidad, cantidad_vacias: vaciasRecibidas, cantidad_defectuosas: defectuosasRecibidas, total: total, metodo_pago: metodoPagoStr, estado: 'Cobrado' }).select().single();
-            if (errorVenta) { alert('Error al registrar venta: ' + errorVenta.message); return; }
-            const { error: errorStock } = await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: prodId, p_llenas: -cantidad, p_vacias: vaciasRecibidas, p_defectuosas: defectuosasRecibidas });
-            if (errorStock) { alert('Venta registrada pero error al actualizar camioneta: ' + errorStock.message); return; }
-            await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'venta_app', producto_id: prodId, repartidor_id: repartidorActual.id, llenas: -cantidad, vacias: vaciasRecibidas, defectuosas: defectuosasRecibidas, referencia_id: ventaData.id, observaciones: obsVenta });
-            hablar("Venta registrada");
-            document.getElementById('ventaCantidad').value = 1; document.getElementById('ventaModoVenta').value = 'intercambio'; document.getElementById('ventaTotalPantalla').textContent = "$0";
-            document.getElementById('inputClienteNombre').value = ''; document.getElementById('inputClienteId').value = ''; document.getElementById('ventaTipoCliente').value = ''; actualizarGarrafas();
-            cargarStockCamionetaUI();
-        }
-
-        // ==========================================
-        // MÓDULO CIERRE DE CAJA
-        // ==========================================
-        async function mostrarPantallaCierre() {
-            document.getElementById('moduloVentas').style.display = 'none';
-            document.getElementById('moduloCierre').style.display = 'block';
-            const hoy = new Date().toISOString().split('T')[0];
-            const { data: ventas, error } = await supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy);
-            if (error) { console.error(error); return; }
-
-            let totalEfectivo = 0, totalTransferencia = 0, totalTarjeta = 0, totalLocal = 0, totalGeneral = 0, totalUnidades = 0, totalCambio = 0;
-            ventas.forEach(v => {
-                totalGeneral += v.total; totalUnidades += v.cantidad_llenas; totalCambio += v.cantidad_defectuosas;
-                if (v.metodo_pago === 'efectivo') totalEfectivo += v.total;
-                else if (v.metodo_pago === 'transferencia') totalTransferencia += v.total;
-                else if (v.metodo_pago === 'tarjeta') totalTarjeta += v.total;
-                else if (v.metodo_pago === 'pago en el local') totalLocal += v.total;
-            });
-
-            // Traemos el vuelto y lo entregado de la base de datos
-            const { data: jornadaData } = await supabaseClient.from('jornadas').select('*').eq('id', jornadaActualId).maybeSingle();
-            const vuelto = jornadaData ? parseFloat(jornadaData.vuelto_inicial) : 0;
-            const entregadoParcial = jornadaData ? parseFloat(jornadaData.entregado_parcial) : 0;
-            
-            const aEntregar = totalEfectivo + vuelto - entregadoParcial;
-
-            document.getElementById('informeProductos').innerHTML = `<div class="flex justify-between"><span>Llenas entregadas:</span> <span>${totalUnidades}</span></div>`;
-            document.getElementById('informeEfectivo').textContent = "$" + totalEfectivo.toLocaleString('es-UY');
-            document.getElementById('informeTransferencia').textContent = "$" + totalTransferencia.toLocaleString('es-UY');
-            document.getElementById('informeTarjeta').textContent = "$" + totalTarjeta.toLocaleString('es-UY');
-            document.getElementById('informeLocal').textContent = "$" + totalLocal.toLocaleString('es-UY');
-            document.getElementById('informeCambio').textContent = totalCambio;
-            document.getElementById('informeTotalGeneral').textContent = "$" + totalGeneral.toLocaleString('es-UY');
-            document.getElementById('informeVuelto').textContent = "$" + vuelto.toLocaleString('es-UY');
-            document.getElementById('informeEntregadoParcial').textContent = "$" + entregadoParcial.toLocaleString('es-UY');
-            document.getElementById('informeTotalEntregar').textContent = "$" + Math.max(0, aEntregar).toLocaleString('es-UY');
-        }
-
-        async function realizarCierreParcial() {
-            const hoy = new Date().toISOString().split('T')[0];
-            const { data: ventas } = await supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy);
-            
-            let totalEfectivo = 0;
-            if (ventas) { ventas.forEach(v => { if (v.metodo_pago === 'efectivo') totalEfectivo += v.total; }); }
-
-            const { data: jornadaData } = await supabaseClient.from('jornadas').select('*').eq('id', jornadaActualId).maybeSingle();
-            const vuelto = jornadaData ? parseFloat(jornadaData.vuelto_inicial) : 0;
-            const entregadoPrevio = jornadaData ? parseFloat(jornadaData.entregado_parcial) : 0;
-            const aEntregarAhora = totalEfectivo + vuelto - entregadoPrevio;
-
-            if (aEntregarAhora <= 0) { alert("No hay efectivo generado para entregar."); return; }
-            
-            if (confirm(`Vas a entregar al administrador: $${aEntregarAhora.toLocaleString('es-UY')}. ¿Confirmar?`)) {
-                const nuevoEntregadoTotal = entregadoPrevio + aEntregarAhora;
-                // ACTUALIZAMOS LA BASE DE DATOS
-                await supabaseClient.from('jornadas').update({ entregado_parcial: nuevoEntregadoTotal }).eq('id', jornadaActualId);
-                hablar("Entrega parcial registrada");
-                mostrarPantallaCierre(); 
-            }
-        }
-
-        async function cerrarJornada() {
-            if (!confirm('¿Estás seguro de CERRAR LA JORNADA? Esta acción no se puede deshacer.')) return;
-            
-            // CERRAR JORNADA EN BASE DE DATOS
-            await supabaseClient.from('jornadas').update({ activa: false }).eq('id', jornadaActualId);
-
-            // Limpiar sesión local
-            localStorage.removeItem('jornada_id');
-            jornadaActualId = null;
-
-            hablar("Jornada finalizada. Hasta mañana!");
-            document.getElementById('moduloCierre').style.display = 'none';
-            document.getElementById('pantallaTrabajo').style.display = 'none';
-            document.getElementById('pantallaInicioJornada').style.display = 'flex';
-            document.getElementById('inputKmInicio').value = '';
-            document.getElementById('inputVuelto').value = '0';
-            cargarDatosJornada();
-        }
-
-        function mostrarPantallaVentas() {
-            document.getElementById('moduloCierre').style.display = 'none';
-            document.getElementById('moduloVentas').style.display = 'block';
-        }
-    </script>
-</body>
-</html>
+            else
