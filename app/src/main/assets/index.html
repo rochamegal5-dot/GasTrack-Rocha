@@ -31,7 +31,6 @@
             <label class="block text-xs font-bold text-gray-600 mb-1">KM del Vehiculo</label>
             <input type="number" id="inputKmInicio" class="block w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-xl text-center font-black mb-4" placeholder="Ej: 85430">
             
-            <!-- NUEVO: VUELTO INICIAL -->
             <label class="block text-xs font-bold text-green-700 mb-1">💰 Vuelto Inicial ($)</label>
             <input type="number" id="inputVuelto" class="block w-full px-4 py-3 border-2 border-green-300 rounded-lg text-xl text-center font-black mb-4 bg-green-50" placeholder="Ej: 5000" value="0">
 
@@ -252,7 +251,7 @@
             
             localStorage.setItem('km_inicio', kmInicio);
             localStorage.setItem('vuelto_inicio', vuelto);
-            localStorage.setItem('entregado_parcial', '0'); // Inicializamos en 0
+            localStorage.setItem('entregado_parcial', '0');
 
             const { data: stockDeposito } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
             let cargaValida = true; let movimientos = [];
@@ -401,7 +400,7 @@
             ventas.forEach(v => {
                 totalGeneral += v.total;
                 totalUnidades += v.cantidad_llenas;
-                totalCambio += v.cantidad_defectuosas; // Los cambios falla son las vacías que entran
+                totalCambio += v.cantidad_defectuosas;
                 if (v.metodo_pago === 'efectivo') totalEfectivo += v.total;
                 else if (v.metodo_pago === 'transferencia') totalTransferencia += v.total;
                 else if (v.metodo_pago === 'tarjeta') totalTarjeta += v.total;
@@ -424,9 +423,7 @@
             document.getElementById('informeTotalEntregar').textContent = "$" + Math.max(0, aEntregar).toLocaleString('es-UY');
         }
 
-
-                function realizarCierreParcial() {
-            // Consultamos a Supabase en este exacto momento cuánto efectivo se generó
+        function realizarCierreParcial() {
             const hoy = new Date().toISOString().split('T')[0];
             supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy).then(({ data, error }) => {
                 if (error) { alert("Error al consultar ventas"); return; }
@@ -443,21 +440,18 @@
                     return;
                 }
 
-                // Confirmación: Entrega TODO lo que tiene en la billetera hasta ahora
                 if (confirm(`Vas a entregar al administrador TODO lo generado hasta ahora: $${aEntregarAhora.toLocaleString('es-UY')}. ¿Confirmar entrega?`)) {
                     const nuevoEntregadoTotal = entregadoPrevio + aEntregarAhora;
                     localStorage.setItem('entregado_parcial', nuevoEntregadoTotal.toString());
                     hablar("Entrega parcial registrada");
-                    mostrarPantallaCierre(); // Refrescar los números (el "A Entregar" debería quedar en $0)
+                    mostrarPantallaCierre(); 
                 }
             });
         }
-       
 
         function cerrarJornada() {
             if (!confirm('¿Estás seguro de CERRAR LA JORNADA? Esta acción no se puede deshacer.')) return;
 
-            // Limpiar todo el estado de la jornada
             localStorage.removeItem('jornada_activa');
             localStorage.removeItem('km_inicio');
             localStorage.removeItem('vuelto_inicio');
@@ -465,7 +459,6 @@
 
             hablar("Jornada finalizada. Hasta mañana!");
             
-            // Volver al inicio
             document.getElementById('moduloCierre').style.display = 'none';
             document.getElementById('pantallaTrabajo').style.display = 'none';
             document.getElementById('pantallaInicioJornada').style.display = 'flex';
