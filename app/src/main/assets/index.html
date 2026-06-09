@@ -1,4 +1,4 @@
-<meta charset="UTF-8"><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -153,9 +153,10 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let repartidorActual = { id: '', nombre: '' };
-        let productosCamioneta = []; // Guarda 11, 13 y 45
+        let productosCamioneta = [];
         let clientesCache = [];
         let fleteConfigurado = 0;
+        let jornadaActualId = null; // Guardaremos el ID de la jornada de Supabase
 
         document.addEventListener('DOMContentLoaded', async () => {
             await cargarRepartidoresLogin();
@@ -206,15 +207,19 @@
             cargarDatosJornada();
         }
 
-        function verificarSesionPrevia() {
+        async function verificarSesionPrevia() {
             const repId = localStorage.getItem('rep_id');
             const repNombre = localStorage.getItem('rep_nombre');
-            const jornadaActiva = localStorage.getItem('jornada_activa');
+            const jornadaId = localStorage.getItem('jornada_id');
+            
             if (repId && repNombre) {
                 repartidorActual.id = repId;
                 repartidorActual.nombre = repNombre;
                 document.getElementById('nombreRepartidorTop').textContent = repNombre;
-                if(jornadaActiva === 'true') {
+                
+                if(jornadaId) {
+                    // Si ya hay una jornada activa en la DB, vamos directo a trabajar
+                    jornadaActualId = jornadaId;
                     document.getElementById('pantallaLogin').style.display = 'none';
                     document.getElementById('pantallaInicioJornada').style.display = 'none';
                     document.getElementById('pantallaTrabajo').style.display = 'block';
@@ -245,9 +250,7 @@
                 return;
             }
 
-            // FILTRO: Solo creamos casilleros de inicio para 11kg y 13kg. El 45 se carga luego vía Recarga.
             const productosInicio = productosCamioneta.filter(p => p.tipo === 'garrafa_11' || p.tipo === 'garrafa_13');
-
             productosInicio.forEach(prod => {
                 const div = document.createElement('div');
                 div.className = 'bg-gray-100 p-2 rounded-lg text-center';
@@ -277,21 +280,35 @@
             }
 
             if (totalLlenas === 0) { alert('Debés cargar al menos 1 garrafa (11kg o 13kg) para empezar el día.'); return; }
-            if (!confirm(`Confirmar inicio de jornada con ${totalLlenas} garrafas?`)) return;
-
-            localStorage.setItem('km_inicio', kmInicio);
-            localStorage.setItem('vuelto_inicio', vuelto);
-            localStorage.setItem('entregado_parcial', '0');
+            if (!confirm(`Confirmar inicio con ${totalLlenas} garrafas y $${parseFloat(vuelto).toLocaleString('es-UY')} de vuelto?`)) return;
 
             try {
+                // 1. CREAR LA JORNADA EN SUPABASE (Aquí se guarda el vuelto)
+                const { data: jornadaData, error: errJornada } = await supabaseClient.from('jornadas').insert({
+                    repartidor_id: repartidorActual.id,
+                    km_inicio: kmInicio,
+                    vuelto_inicial: vuelto,
+                    activa: true
+                }).select().single();
+
+                if (errJornada) throw new Error('Error al crear jornada en BD: ' + errJornada.message);
+                
+                jornadaActualId = jornadaData.id;
+                localStorage.setItem('jornada_id', jornadaActualId);
+
+                // 2. Verificar Stock en Depósito
                 const { data: stockDeposito, error: errStock } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', movimientos.map(m => m.producto_id));
                 if (errStock) throw new Error('Error leyendo stock: ' + errStock.message);
 
                 for (const mov of movimientos) {
                     const stockDisponible = stockDeposito.find(s => s.producto_id === mov.producto_id)?.llenas || 0;
-                    if (mov.cantidad > stockDisponible) { alert(`Stock insuficiente. Solo hay ${stockDisponible} en depósito.`); return; }
+                    if (mov.cantidad > stockDisponible) { 
+                        alert(`Stock insuficiente. Solo hay ${stockDisponible} en depósito.`); 
+                        return; 
+                    }
                 }
 
+                // 3. Procesar Movimientos
                 for (const mov of movimientos) {
                     const resDep = await supabaseClient.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
                     if (resDep.error) throw new Error('Error RPC Depósito: ' + resDep.error.message);
@@ -303,7 +320,6 @@
                 }
 
                 hablar("Jornada iniciada. Buen trabajo!");
-                localStorage.setItem('jornada_activa', 'true');
                 document.getElementById('pantallaInicioJornada').style.display = 'none';
                 document.getElementById('pantallaTrabajo').style.display = 'block';
                 inicializarPantallaTrabajo();
@@ -440,8 +456,11 @@
                 else if (v.metodo_pago === 'pago en el local') totalLocal += v.total;
             });
 
-            const vuelto = parseFloat(localStorage.getItem('vuelto_inicio')) || 0;
-            const entregadoParcial = parseFloat(localStorage.getItem('entregado_parcial')) || 0;
+            // Traemos el vuelto y lo entregado de la base de datos
+            const { data: jornadaData } = await supabaseClient.from('jornadas').select('*').eq('id', jornadaActualId).maybeSingle();
+            const vuelto = jornadaData ? parseFloat(jornadaData.vuelto_inicial) : 0;
+            const entregadoParcial = jornadaData ? parseFloat(jornadaData.entregado_parcial) : 0;
+            
             const aEntregar = totalEfectivo + vuelto - entregadoParcial;
 
             document.getElementById('informeProductos').innerHTML = `<div class="flex justify-between"><span>Llenas entregadas:</span> <span>${totalUnidades}</span></div>`;
@@ -456,28 +475,39 @@
             document.getElementById('informeTotalEntregar').textContent = "$" + Math.max(0, aEntregar).toLocaleString('es-UY');
         }
 
-        function realizarCierreParcial() {
+        async function realizarCierreParcial() {
             const hoy = new Date().toISOString().split('T')[0];
-            supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy).then(({ data, error }) => {
-                if (error) { alert("Error al consultar ventas"); return; }
-                let totalEfectivo = 0;
-                data.forEach(v => { if (v.metodo_pago === 'efectivo') totalEfectivo += v.total; });
-                const vuelto = parseFloat(localStorage.getItem('vuelto_inicio')) || 0;
-                const entregadoPrevio = parseFloat(localStorage.getItem('entregado_parcial')) || 0;
-                const aEntregarAhora = totalEfectivo + vuelto - entregadoPrevio;
-                if (aEntregarAhora <= 0) { alert("No hay efectivo generado para entregar."); return; }
-                if (confirm(`Vas a entregar al administrador: $${aEntregarAhora.toLocaleString('es-UY')}. ¿Confirmar?`)) {
-                    const nuevoEntregadoTotal = entregadoPrevio + aEntregarAhora;
-                    localStorage.setItem('entregado_parcial', nuevoEntregadoTotal.toString());
-                    hablar("Entrega parcial registrada");
-                    mostrarPantallaCierre(); 
-                }
-            });
+            const { data: ventas } = await supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy);
+            
+            let totalEfectivo = 0;
+            if (ventas) { ventas.forEach(v => { if (v.metodo_pago === 'efectivo') totalEfectivo += v.total; }); }
+
+            const { data: jornadaData } = await supabaseClient.from('jornadas').select('*').eq('id', jornadaActualId).maybeSingle();
+            const vuelto = jornadaData ? parseFloat(jornadaData.vuelto_inicial) : 0;
+            const entregadoPrevio = jornadaData ? parseFloat(jornadaData.entregado_parcial) : 0;
+            const aEntregarAhora = totalEfectivo + vuelto - entregadoPrevio;
+
+            if (aEntregarAhora <= 0) { alert("No hay efectivo generado para entregar."); return; }
+            
+            if (confirm(`Vas a entregar al administrador: $${aEntregarAhora.toLocaleString('es-UY')}. ¿Confirmar?`)) {
+                const nuevoEntregadoTotal = entregadoPrevio + aEntregarAhora;
+                // ACTUALIZAMOS LA BASE DE DATOS
+                await supabaseClient.from('jornadas').update({ entregado_parcial: nuevoEntregadoTotal }).eq('id', jornadaActualId);
+                hablar("Entrega parcial registrada");
+                mostrarPantallaCierre(); 
+            }
         }
 
-        function cerrarJornada() {
+        async function cerrarJornada() {
             if (!confirm('¿Estás seguro de CERRAR LA JORNADA? Esta acción no se puede deshacer.')) return;
-            localStorage.removeItem('jornada_activa'); localStorage.removeItem('km_inicio'); localStorage.removeItem('vuelto_inicio'); localStorage.removeItem('entregado_parcial');
+            
+            // CERRAR JORNADA EN BASE DE DATOS
+            await supabaseClient.from('jornadas').update({ activa: false }).eq('id', jornadaActualId);
+
+            // Limpiar sesión local
+            localStorage.removeItem('jornada_id');
+            jornadaActualId = null;
+
             hablar("Jornada finalizada. Hasta mañana!");
             document.getElementById('moduloCierre').style.display = 'none';
             document.getElementById('pantallaTrabajo').style.display = 'none';
