@@ -28,14 +28,15 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-black text-center text-yellow-700 mb-4">Iniciar Jornada</h2>
             <p class="text-center text-sm mb-4" id="fechaHoy"></p>
-            <label class="block text-xs font-bold text-gray-600 mb-1">KM del Vehiculo</label>
+            <label class="block text-xs font-bold text-gray-600 mb-1">KM del Vehiculo *</label>
             <input type="number" id="inputKmInicio" class="block w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-xl text-center font-black mb-4" placeholder="Ej: 85430">
             
             <label class="block text-xs font-bold text-green-700 mb-1">💰 Vuelto Inicial ($)</label>
-            <input type="number" id="inputVuelto" class="block w-full px-4 py-3 border-2 border-green-300 rounded-lg text-xl text-center font-black mb-4 bg-green-50" placeholder="Ej: 5000" value="0">
+            <input type="number" id="inputVuelto" class="block w-full px-4 py-3 border-2 border-green-300 rounded-lg text-xl text-center font-black mb-4 bg-green-50" placeholder="0" value="0">
 
-            <p class="font-bold text-gray-800 mb-2">Stock a Cargar (Llenas):</p>
-            <div id="contenedorStockInicial" class="grid grid-cols-3 gap-2 mb-4"></div>
+            <p class="font-bold text-gray-800 mb-2">Stock a Cargar (Llenas) *</p>
+            <p class="text-xs text-gray-500 mb-2">Los tubos de 45kg se agregan vía "Recarga" al momento de la venta.</p>
+            <div id="contenedorStockInicial" class="grid grid-cols-2 gap-2 mb-4"></div>
             <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer">EMPEZAR EL DIA</button>
         </div>
     </div>
@@ -152,7 +153,7 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let repartidorActual = { id: '', nombre: '' };
-        let productosCamioneta = [];
+        let productosCamioneta = []; // Guarda 11, 13 y 45
         let clientesCache = [];
         let fleteConfigurado = 0;
 
@@ -171,9 +172,11 @@
         }
 
         async function cargarFlete() {
-            const { data } = await supabaseClient.from('configuraciones').select('valor').eq('clave', 'flete_reparto').maybeSingle();
-            if (data) fleteConfigurado = parseFloat(data.valor) || 0;
-            document.getElementById('textoFleteAuto').textContent = "$" + fleteConfigurado.toLocaleString('es-UY');
+            try {
+                const { data, error } = await supabaseClient.from('configuraciones').select('valor').eq('clave', 'flete_reparto').maybeSingle();
+                if (!error && data) { fleteConfigurado = parseFloat(data.valor) || 0; }
+                document.getElementById('textoFleteAuto').textContent = "$" + fleteConfigurado.toLocaleString('es-UY');
+            } catch(e) { console.error("Error cargando flete", e); }
         }
 
         // ==========================================
@@ -183,7 +186,7 @@
             const select = document.getElementById('selectRepartidor');
             select.innerHTML = '<option value="">Cargando...</option>';
             const { data, error } = await supabaseClient.from('repartidores').select('*').eq('activo', true).order('nombre');
-            if (error) { select.innerHTML = '<option value="">Error</option>'; return; }
+            if (error) { select.innerHTML = '<option value="">Error BD</option>'; return; }
             select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
             data.forEach(rep => { const option = document.createElement('option'); option.value = rep.id; option.textContent = rep.nombre; select.appendChild(option); });
         }
@@ -230,12 +233,22 @@
         // ==========================================
         async function cargarDatosJornada() {
             const contenedor = document.getElementById('contenedorStockInicial');
-            contenedor.innerHTML = '<p class="col-span-3 text-center text-xs">Cargando...</p>';
+            contenedor.innerHTML = '<p class="col-span-2 text-center text-xs">Cargando productos...</p>';
             const { data, error } = await supabaseClient.from('productos').select('*').in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45']).order('nombre');
-            if (error || !data) { contenedor.innerHTML = '<p class="col-span-3 text-red-500 text-xs">Error</p>'; return; }
-            productosCamioneta = data;
+            if (error) { contenedor.innerHTML = '<p class="col-span-2 text-red-500 text-xs">Error BD</p>'; return; }
+            
+            productosCamioneta = data || [];
             contenedor.innerHTML = '';
-            productosCamioneta.forEach(prod => {
+            
+            if (productosCamioneta.length === 0) {
+                contenedor.innerHTML = '<p class="col-span-2 text-red-500 text-center text-xs font-bold">No hay productos 11, 13 o 45 en la BD.</p>';
+                return;
+            }
+
+            // FILTRO: Solo creamos casilleros de inicio para 11kg y 13kg. El 45 se carga luego vía Recarga.
+            const productosInicio = productosCamioneta.filter(p => p.tipo === 'garrafa_11' || p.tipo === 'garrafa_13');
+
+            productosInicio.forEach(prod => {
                 const div = document.createElement('div');
                 div.className = 'bg-gray-100 p-2 rounded-lg text-center';
                 div.innerHTML = `<label class="block text-xs font-bold text-gray-700 mb-1">${prod.nombre}</label><input type="number" id="stockInicial_${prod.id}" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">`;
@@ -246,35 +259,59 @@
         async function registrarInicioJornada() {
             const kmInicio = document.getElementById('inputKmInicio').value;
             const vuelto = document.getElementById('inputVuelto').value;
+
             if (!kmInicio || parseInt(kmInicio) <= 0) { alert('Ingresá los KM del vehículo.'); return; }
-            if (!vuelto || parseFloat(vuelto) < 0) { alert('Ingresá el vuelto inicial (puede ser 0).'); return; }
-            
+            if (vuelto === "" || parseFloat(vuelto) < 0) { alert('Ingresá el vuelto inicial (puede ser 0).'); return; }
+            if (productosCamioneta.length === 0) { alert('No hay productos cargados para iniciar.'); return; }
+
+            let movimientos = [];
+            let totalLlenas = 0;
+            const productosInicio = productosCamioneta.filter(p => p.tipo === 'garrafa_11' || p.tipo === 'garrafa_13');
+
+            for (const prod of productosInicio) {
+                const inputCant = parseInt(document.getElementById(`stockInicial_${prod.id}`).value) || 0;
+                if (inputCant > 0) {
+                    movimientos.push({ producto_id: prod.id, cantidad: inputCant });
+                    totalLlenas += inputCant;
+                }
+            }
+
+            if (totalLlenas === 0) { alert('Debés cargar al menos 1 garrafa (11kg o 13kg) para empezar el día.'); return; }
+            if (!confirm(`Confirmar inicio de jornada con ${totalLlenas} garrafas?`)) return;
+
             localStorage.setItem('km_inicio', kmInicio);
             localStorage.setItem('vuelto_inicio', vuelto);
             localStorage.setItem('entregado_parcial', '0');
 
-            const { data: stockDeposito } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
-            let cargaValida = true; let movimientos = [];
-            for (const prod of productosCamioneta) {
-                const inputCant = parseInt(document.getElementById(`stockInicial_${prod.id}`).value) || 0;
-                const stockDisponible = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
-                if (inputCant > stockDisponible) { alert(`Stock insuficiente en depósito para ${prod.nombre}. Hay ${stockDisponible}.`); cargaValida = false; break; }
-                if (inputCant > 0) movimientos.push({ producto_id: prod.id, cantidad: inputCant });
-            }
-            if (!cargaValida) return;
-
             try {
+                const { data: stockDeposito, error: errStock } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', movimientos.map(m => m.producto_id));
+                if (errStock) throw new Error('Error leyendo stock: ' + errStock.message);
+
                 for (const mov of movimientos) {
-                    await supabaseClient.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
-                    await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
+                    const stockDisponible = stockDeposito.find(s => s.producto_id === mov.producto_id)?.llenas || 0;
+                    if (mov.cantidad > stockDisponible) { alert(`Stock insuficiente. Solo hay ${stockDisponible} en depósito.`); return; }
+                }
+
+                for (const mov of movimientos) {
+                    const resDep = await supabaseClient.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
+                    if (resDep.error) throw new Error('Error RPC Depósito: ' + resDep.error.message);
+
+                    const resCam = await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
+                    if (resCam.error) throw new Error('Error RPC Camioneta: ' + resCam.error.message);
+
                     await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'carga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: -mov.cantidad, observaciones: 'Carga inicial' });
                 }
+
                 hablar("Jornada iniciada. Buen trabajo!");
                 localStorage.setItem('jornada_activa', 'true');
                 document.getElementById('pantallaInicioJornada').style.display = 'none';
                 document.getElementById('pantallaTrabajo').style.display = 'block';
                 inicializarPantallaTrabajo();
-            } catch (e) { alert('Error al cargar el stock: ' + e.message); }
+
+            } catch (e) {
+                console.error("ERROR INICIO JORNADA:", e);
+                alert('Error al iniciar jornada:\n' + e.message);
+            }
         }
 
         // ==========================================
@@ -289,7 +326,7 @@
             productosCamioneta.forEach(prod => {
                 const item = stock?.find(s => s.producto_id === prod.id);
                 const llenas = item ? item.llenas : 0; const vacias = item ? item.vacias : 0; const defect = item ? (item.defectuosas || 0) : 0;
-                htmlGrid += `<div class="bg-white p-2 rounded-lg text-center shadow-sm"><p class="text-[10px] font-bold text-gray-500 truncate">${prod.nombre.replace('Garrafa ', '')}</p><p class="text-2xl font-black text-green-700">${llenas}</p><p class="text-[10px] font-bold text-gray-400">Vac: ${vacias}</p><p class="text-[10px] font-bold text-red-500">Def: ${defect}</p></div>`;
+                htmlGrid += `<div class="bg-white p-2 rounded-lg text-center shadow-sm"><p class="text-[10px] font-bold text-gray-500 truncate">${prod.nombre.replace('Garrafa ', '').replace('Tubo ', '')}</p><p class="text-2xl font-black text-green-700">${llenas}</p><p class="text-[10px] font-bold text-gray-400">Vac: ${vacias}</p><p class="text-[10px] font-bold text-red-500">Def: ${defect}</p></div>`;
             });
             grid.innerHTML = htmlGrid;
         }
@@ -301,7 +338,7 @@
             productosCamioneta.forEach(prod => {
                 const item = stockCamioneta?.find(s => s.producto_id === prod.id); const vaciasActuales = item ? item.vacias : 0;
                 const div = document.createElement('div'); div.className = 'grid grid-cols-3 gap-2 items-center bg-white p-2 rounded-lg border';
-                div.innerHTML = `<div class="col-span-1 font-bold text-sm text-gray-800">${prod.nombre.replace('Garrafa ', '')}</div><div class="text-center"><label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label><input type="number" id="recVac_${prod.id}" min="0" max="${vaciasActuales}" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div class="text-center"><label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label><input type="number" id="recLlen_${prod.id}" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700"></div>`;
+                div.innerHTML = `<div class="col-span-1 font-bold text-sm text-gray-800">${prod.nombre.replace('Garrafa ', '').replace('Tubo ', '')}</div><div class="text-center"><label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label><input type="number" id="recVac_${prod.id}" min="0" max="${vaciasActuales}" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div class="text-center"><label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label><input type="number" id="recLlen_${prod.id}" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700"></div>`;
                 contenedor.appendChild(div);
             });
         }
@@ -390,17 +427,13 @@
         async function mostrarPantallaCierre() {
             document.getElementById('moduloVentas').style.display = 'none';
             document.getElementById('moduloCierre').style.display = 'block';
-
             const hoy = new Date().toISOString().split('T')[0];
             const { data: ventas, error } = await supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy);
             if (error) { console.error(error); return; }
 
             let totalEfectivo = 0, totalTransferencia = 0, totalTarjeta = 0, totalLocal = 0, totalGeneral = 0, totalUnidades = 0, totalCambio = 0;
-            
             ventas.forEach(v => {
-                totalGeneral += v.total;
-                totalUnidades += v.cantidad_llenas;
-                totalCambio += v.cantidad_defectuosas;
+                totalGeneral += v.total; totalUnidades += v.cantidad_llenas; totalCambio += v.cantidad_defectuosas;
                 if (v.metodo_pago === 'efectivo') totalEfectivo += v.total;
                 else if (v.metodo_pago === 'transferencia') totalTransferencia += v.total;
                 else if (v.metodo_pago === 'tarjeta') totalTarjeta += v.total;
@@ -427,20 +460,13 @@
             const hoy = new Date().toISOString().split('T')[0];
             supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy).then(({ data, error }) => {
                 if (error) { alert("Error al consultar ventas"); return; }
-                
                 let totalEfectivo = 0;
                 data.forEach(v => { if (v.metodo_pago === 'efectivo') totalEfectivo += v.total; });
-                
                 const vuelto = parseFloat(localStorage.getItem('vuelto_inicio')) || 0;
                 const entregadoPrevio = parseFloat(localStorage.getItem('entregado_parcial')) || 0;
                 const aEntregarAhora = totalEfectivo + vuelto - entregadoPrevio;
-
-                if (aEntregarAhora <= 0) {
-                    alert("No hay efectivo generado para entregar en este momento.");
-                    return;
-                }
-
-                if (confirm(`Vas a entregar al administrador TODO lo generado hasta ahora: $${aEntregarAhora.toLocaleString('es-UY')}. ¿Confirmar entrega?`)) {
+                if (aEntregarAhora <= 0) { alert("No hay efectivo generado para entregar."); return; }
+                if (confirm(`Vas a entregar al administrador: $${aEntregarAhora.toLocaleString('es-UY')}. ¿Confirmar?`)) {
                     const nuevoEntregadoTotal = entregadoPrevio + aEntregarAhora;
                     localStorage.setItem('entregado_parcial', nuevoEntregadoTotal.toString());
                     hablar("Entrega parcial registrada");
@@ -451,14 +477,8 @@
 
         function cerrarJornada() {
             if (!confirm('¿Estás seguro de CERRAR LA JORNADA? Esta acción no se puede deshacer.')) return;
-
-            localStorage.removeItem('jornada_activa');
-            localStorage.removeItem('km_inicio');
-            localStorage.removeItem('vuelto_inicio');
-            localStorage.removeItem('entregado_parcial');
-
+            localStorage.removeItem('jornada_activa'); localStorage.removeItem('km_inicio'); localStorage.removeItem('vuelto_inicio'); localStorage.removeItem('entregado_parcial');
             hablar("Jornada finalizada. Hasta mañana!");
-            
             document.getElementById('moduloCierre').style.display = 'none';
             document.getElementById('pantallaTrabajo').style.display = 'none';
             document.getElementById('pantallaInicioJornada').style.display = 'flex';
@@ -471,7 +491,6 @@
             document.getElementById('moduloCierre').style.display = 'none';
             document.getElementById('moduloVentas').style.display = 'block';
         }
-
     </script>
 </body>
 </html>
