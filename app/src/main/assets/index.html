@@ -30,6 +30,11 @@
             <p class="text-center text-sm mb-4" id="fechaHoy"></p>
             <label class="block text-xs font-bold text-gray-600 mb-1">KM del Vehiculo</label>
             <input type="number" id="inputKmInicio" class="block w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-xl text-center font-black mb-4" placeholder="Ej: 85430">
+            
+            <!-- NUEVO: VUELTO INICIAL -->
+            <label class="block text-xs font-bold text-green-700 mb-1">💰 Vuelto Inicial ($)</label>
+            <input type="number" id="inputVuelto" class="block w-full px-4 py-3 border-2 border-green-300 rounded-lg text-xl text-center font-black mb-4 bg-green-50" placeholder="Ej: 5000" value="0">
+
             <p class="font-bold text-gray-800 mb-2">Stock a Cargar (Llenas):</p>
             <div id="contenedorStockInicial" class="grid grid-cols-3 gap-2 mb-4"></div>
             <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer">EMPEZAR EL DIA</button>
@@ -45,8 +50,6 @@
 
         <!-- MÓDULO 1: VENTAS -->
         <div id="moduloVentas" class="p-4 space-y-4">
-            
-            <!-- STOCK EN CAMIONETA -->
             <div class="bg-indigo-100 p-3 rounded-xl shadow-sm border-l-4 border-indigo-500">
                 <div class="flex justify-between items-center mb-2">
                     <p class="text-xs font-bold text-indigo-800">STOCK EN MI CAMIONETA</p>
@@ -55,10 +58,8 @@
                 <div id="stockGridUI" class="grid grid-cols-3 gap-2"></div>
             </div>
 
-            <!-- RECARGA -->
             <div id="seccionRecarga" style="display: none;" class="bg-blue-50 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
                 <h3 class="font-bold text-blue-800 mb-2">Carga desde Depósito</h3>
-                <p class="text-xs text-blue-600 mb-2">Devolvés vacías y sacás llenas.</p>
                 <div id="contenedorRecarga" class="space-y-2 mb-3"></div>
                 <div class="flex gap-2">
                     <button onclick="registrarRecarga()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold cursor-pointer">Confirmar</button>
@@ -66,7 +67,6 @@
                 </div>
             </div>
 
-            <!-- REGISTRAR VENTA -->
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
                 <h3 class="font-bold text-gray-800 mb-3 text-lg">Registrar Venta</h3>
                 <div class="space-y-3">
@@ -77,48 +77,38 @@
                         <option value="comercio">Comercio</option>
                         <option value="comercio_mides">Comercio Mides</option>
                     </select>
-                    
-                    <!-- BÚSQUEDA DE COMERCIO -->
                     <div id="seccionClienteComercio" style="display: none;">
                         <input type="text" id="inputClienteNombre" list="lista-comercios" placeholder="Escriba nombre del comercio..." class="block w-full px-3 py-3 border-2 border-purple-300 rounded-lg text-sm font-bold bg-purple-50 cursor-text" oninput="seleccionarCliente()">
                         <datalist id="lista-comercios"></datalist>
                         <input type="hidden" id="inputClienteId" value="">
                     </div>
-
-                    <!-- AVISO DE FLETE AUTOMÁTICO -->
                     <div id="seccionFlete" style="display: none;" class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400 text-center">
                         <p class="text-xs font-bold text-blue-800">🚚 Incluye Flete de Reparto</p>
                         <p class="text-2xl font-black text-blue-700" id="textoFleteAuto">$0</p>
                     </div>
-
                     <div class="grid grid-cols-2 gap-3">
                         <select id="ventaTipoGarrafa" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer">
                             <option value="">-- Producto --</option>
                         </select>
                         <input type="number" id="ventaCantidad" value="1" min="1" step="1" oninput="calcularPrecioVenta()" onblur="arreglarCantidad()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm text-center font-black">
                     </div>
-
                     <select id="ventaModoVenta" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold cursor-pointer bg-green-50">
                         <option value="intercambio">🔄 Intercambio (Devuelve vacía)</option>
                         <option value="envase_gas">🛒 Envase + Gas (No devuelve)</option>
                         <option value="cambio_falla">🔄 Cambio / Falla ($0)</option>
                     </select>
-
                     <div class="bg-gray-100 p-4 rounded-lg border-2 border-dashed border-gray-300 text-center">
                         <p class="text-xs text-gray-500 font-bold mb-1">TOTAL A COBRAR</p>
                         <p class="text-4xl font-black text-green-700" id="ventaTotalPantalla">$0</p>
                     </div>
-
                     <input type="hidden" id="ventaPrecioBaseOculto" value="0">
                     <input type="hidden" id="ventaTotalOculto" value="0">
-
                     <select id="ventaModalidad" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer">
                         <option value="Efectivo">💵 Efectivo</option>
                         <option value="Transferencia">📱 Transferencia</option>
                         <option value="Tarjeta">💳 Tarjeta</option>
                         <option value="Pago en el local">🏦 Pago en el local</option>
                     </select>
-
                     <button onclick="registrarVenta()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer shadow-lg">Confirmar Venta</button>
                 </div>
             </div>
@@ -129,7 +119,30 @@
             <button onclick="mostrarPantallaVentas()" class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 flex items-center justify-center">
                 <span class="mr-2">⬅</span> Volver a Ventas
             </button>
-            <p class="text-center text-gray-500 text-sm">Módulo de cierre en construcción...</p>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+                <h3 class="font-bold text-gray-800 mb-3 text-lg">Cierre y Entrega del Día</h3>
+                <div class="bg-orange-50 p-4 rounded-xl mb-3 text-sm space-y-2">
+                    <p class="font-black text-gray-700 mb-2">Productos Entregados:</p>
+                    <div id="informeProductos" class="font-bold text-orange-900 space-y-1"></div>
+                    <hr class="border-orange-300 my-2">
+                    <p class="font-black text-gray-700 mb-2">Dinero Obtenido:</p>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Efectivo:</span> <span id="informeEfectivo">$0</span></div>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Transferencia:</span> <span id="informeTransferencia">$0</span></div>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta:</span> <span id="informeTarjeta">$0</span></div>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Pago en el local:</span> <span id="informeLocal">$0</span></div>
+                    <hr class="border-orange-300 my-2">
+                    <div class="flex justify-between font-bold text-orange-900"><span>Envases vacios (Cambio):</span> <span id="informeCambio" class="text-red-600">0</span></div>
+                    <div class="flex justify-between font-black text-orange-900 text-lg mt-1"><span>TOTAL VENDIDO:</span> <span id="informeTotalGeneral">$0</span></div>
+                    
+                    <hr class="border-orange-300 my-2">
+                    <p class="font-black text-gray-700 mb-2">Cálculo de Efectivo:</p>
+                    <div class="flex justify-between font-bold text-green-700"><span>Vuelto Inicial:</span> <span id="informeVuelto">$0</span></div>
+                    <div class="flex justify-between font-bold text-red-700"><span>Entregado Parcial:</span> <span id="informeEntregadoParcial">$0</span></div>
+                    <div class="flex justify-between font-black text-green-700 text-lg mt-1"><span>A ENTREGAR (Efectivo):</span> <span id="informeTotalEntregar">$0</span></div>
+                </div>
+                <button onclick="realizarCierreParcial()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2">Entregar Efectivo (Parcial)</button>
+                <button onclick="cerrarJornada()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer">CERRAR JORNADA FINAL</button>
+            </div>
         </div>
     </div>
 
@@ -142,11 +155,11 @@
         let repartidorActual = { id: '', nombre: '' };
         let productosCamioneta = [];
         let clientesCache = [];
-        let fleteConfigurado = 0; // Variable global para el flete
+        let fleteConfigurado = 0;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await cargarRepartidoresLogin();
-            await cargarFlete(); // Cargamos el flete al inicio
+            await cargarFlete();
             verificarSesionPrevia();
         });
 
@@ -158,12 +171,9 @@
             }
         }
 
-        // FUNCIÓN NUEVA: Cargar flete desde Supabase
         async function cargarFlete() {
-            const { data, error } = await supabaseClient.from('configuraciones').select('valor').eq('clave', 'flete_reparto').maybeSingle();
-            if (data) {
-                fleteConfigurado = parseFloat(data.valor) || 0;
-            }
+            const { data } = await supabaseClient.from('configuraciones').select('valor').eq('clave', 'flete_reparto').maybeSingle();
+            if (data) fleteConfigurado = parseFloat(data.valor) || 0;
             document.getElementById('textoFleteAuto').textContent = "$" + fleteConfigurado.toLocaleString('es-UY');
         }
 
@@ -176,12 +186,7 @@
             const { data, error } = await supabaseClient.from('repartidores').select('*').eq('activo', true).order('nombre');
             if (error) { select.innerHTML = '<option value="">Error</option>'; return; }
             select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
-            data.forEach(rep => {
-                const option = document.createElement('option');
-                option.value = rep.id;
-                option.textContent = rep.nombre;
-                select.appendChild(option);
-            });
+            data.forEach(rep => { const option = document.createElement('option'); option.value = rep.id; option.textContent = rep.nombre; select.appendChild(option); });
         }
 
         function iniciarSesion() {
@@ -192,7 +197,6 @@
             repartidorActual.nombre = select.options[select.selectedIndex].text;
             localStorage.setItem('rep_id', repartidorActual.id);
             localStorage.setItem('rep_nombre', repartidorActual.nombre);
-
             document.getElementById('pantallaLogin').style.display = 'none';
             document.getElementById('pantallaInicioJornada').style.display = 'flex';
             document.getElementById('nombreRepartidorTop').textContent = repartidorActual.nombre;
@@ -242,20 +246,22 @@
 
         async function registrarInicioJornada() {
             const kmInicio = document.getElementById('inputKmInicio').value;
+            const vuelto = document.getElementById('inputVuelto').value;
             if (!kmInicio || parseInt(kmInicio) <= 0) { alert('Ingresá los KM del vehículo.'); return; }
+            if (!vuelto || parseFloat(vuelto) < 0) { alert('Ingresá el vuelto inicial (puede ser 0).'); return; }
+            
             localStorage.setItem('km_inicio', kmInicio);
+            localStorage.setItem('vuelto_inicio', vuelto);
+            localStorage.setItem('entregado_parcial', '0'); // Inicializamos en 0
 
             const { data: stockDeposito } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
-            let cargaValida = true;
-            let movimientos = [];
-
+            let cargaValida = true; let movimientos = [];
             for (const prod of productosCamioneta) {
                 const inputCant = parseInt(document.getElementById(`stockInicial_${prod.id}`).value) || 0;
                 const stockDisponible = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
                 if (inputCant > stockDisponible) { alert(`Stock insuficiente en depósito para ${prod.nombre}. Hay ${stockDisponible}.`); cargaValida = false; break; }
                 if (inputCant > 0) movimientos.push({ producto_id: prod.id, cantidad: inputCant });
             }
-
             if (!cargaValida) return;
 
             try {
@@ -269,79 +275,45 @@
                 document.getElementById('pantallaInicioJornada').style.display = 'none';
                 document.getElementById('pantallaTrabajo').style.display = 'block';
                 inicializarPantallaTrabajo();
-            } catch (e) {
-                alert('Error al cargar el stock: ' + e.message);
-            }
+            } catch (e) { alert('Error al cargar el stock: ' + e.message); }
         }
 
         // ==========================================
-        // MÓDULO TRABAJO - STOCK, RECARGA Y VENTAS
+        // MÓDULO TRABAJO
         // ==========================================
-        async function inicializarPantallaTrabajo() {
-            await cargarStockCamionetaUI();
-            await cargarSelectsVentas();
-        }
+        async function inicializarPantallaTrabajo() { await cargarStockCamionetaUI(); await cargarSelectsVentas(); }
 
         async function cargarStockCamionetaUI() {
-            const grid = document.getElementById('stockGridUI');
-            grid.innerHTML = '';
+            const grid = document.getElementById('stockGridUI'); grid.innerHTML = '';
             const { data: stock } = await supabaseClient.from('stock_camioneta').select('*, productos(nombre)').eq('repartidor_id', repartidorActual.id);
             let htmlGrid = '';
             productosCamioneta.forEach(prod => {
                 const item = stock?.find(s => s.producto_id === prod.id);
-                const llenas = item ? item.llenas : 0;
-                const vacias = item ? item.vacias : 0;
-                const defect = item ? (item.defectuosas || 0) : 0;
-                htmlGrid += `
-                    <div class="bg-white p-2 rounded-lg text-center shadow-sm">
-                        <p class="text-[10px] font-bold text-gray-500 truncate">${prod.nombre.replace('Garrafa ', '')}</p>
-                        <p class="text-2xl font-black text-green-700">${llenas}</p>
-                        <p class="text-[10px] font-bold text-gray-400">Vac: ${vacias}</p>
-                        <p class="text-[10px] font-bold text-red-500">Def: ${defect}</p>
-                    </div>`;
+                const llenas = item ? item.llenas : 0; const vacias = item ? item.vacias : 0; const defect = item ? (item.defectuosas || 0) : 0;
+                htmlGrid += `<div class="bg-white p-2 rounded-lg text-center shadow-sm"><p class="text-[10px] font-bold text-gray-500 truncate">${prod.nombre.replace('Garrafa ', '')}</p><p class="text-2xl font-black text-green-700">${llenas}</p><p class="text-[10px] font-bold text-gray-400">Vac: ${vacias}</p><p class="text-[10px] font-bold text-red-500">Def: ${defect}</p></div>`;
             });
             grid.innerHTML = htmlGrid;
         }
 
         async function abrirRecarga() {
-            const seccion = document.getElementById('seccionRecarga');
-            const contenedor = document.getElementById('contenedorRecarga');
-            seccion.style.display = 'block';
-            contenedor.innerHTML = '';
+            const seccion = document.getElementById('seccionRecarga'); const contenedor = document.getElementById('contenedorRecarga');
+            seccion.style.display = 'block'; contenedor.innerHTML = '';
             const { data: stockCamioneta } = await supabaseClient.from('stock_camioneta').select('*').eq('repartidor_id', repartidorActual.id);
-
             productosCamioneta.forEach(prod => {
-                const item = stockCamioneta?.find(s => s.producto_id === prod.id);
-                const vaciasActuales = item ? item.vacias : 0;
-                const defectActuales = item ? (item.defectuosas || 0) : 0;
-                const div = document.createElement('div');
-                div.className = 'grid grid-cols-3 gap-2 items-center bg-white p-2 rounded-lg border';
-                div.innerHTML = `
-                    <div class="col-span-1 font-bold text-sm text-gray-800">${prod.nombre.replace('Garrafa ', '')}</div>
-                    <div class="text-center">
-                        <label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label>
-                        <input type="number" id="recVac_${prod.id}" min="0" max="${vaciasActuales}" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold">
-                    </div>
-                    <div class="text-center">
-                        <label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label>
-                        <input type="number" id="recLlen_${prod.id}" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700">
-                    </div>`;
+                const item = stockCamioneta?.find(s => s.producto_id === prod.id); const vaciasActuales = item ? item.vacias : 0;
+                const div = document.createElement('div'); div.className = 'grid grid-cols-3 gap-2 items-center bg-white p-2 rounded-lg border';
+                div.innerHTML = `<div class="col-span-1 font-bold text-sm text-gray-800">${prod.nombre.replace('Garrafa ', '')}</div><div class="text-center"><label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label><input type="number" id="recVac_${prod.id}" min="0" max="${vaciasActuales}" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div class="text-center"><label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label><input type="number" id="recLlen_${prod.id}" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700"></div>`;
                 contenedor.appendChild(div);
             });
         }
-
         function cerrarRecarga() { document.getElementById('seccionRecarga').style.display = 'none'; }
 
         async function registrarRecarga() {
             const { data: stockDeposito } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
             let movimientos = []; let valido = true;
             for (const prod of productosCamioneta) {
-                const vacEnt = parseInt(document.getElementById(`recVac_${prod.id}`).value) || 0;
-                const llenSac = parseInt(document.getElementById(`recLlen_${prod.id}`).value) || 0;
-                if (llenSac > 0) {
-                    const dispDep = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
-                    if (llenSac > dispDep) { alert(`No hay llenas en depósito para ${prod.nombre}. Solo hay ${dispDep}.`); valido = false; break; }
-                }
+                const vacEnt = parseInt(document.getElementById(`recVac_${prod.id}`).value) || 0; const llenSac = parseInt(document.getElementById(`recLlen_${prod.id}`).value) || 0;
+                if (llenSac > 0) { const dispDep = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0; if (llenSac > dispDep) { alert(`No hay llenas en depósito para ${prod.nombre}. Solo hay ${dispDep}.`); valido = false; break; } }
                 if (vacEnt > 0 || llenSac > 0) movimientos.push({ producto_id: prod.id, vacias_entregadas: vacEnt, llenas_sacadas: llenSac });
             }
             if (!valido) return;
@@ -351,9 +323,7 @@
                     await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.llenas_sacadas, p_vacias: -mov.vacias_entregadas, p_defectuosas: 0 });
                     await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'recarga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: mov.llenas_sacadas, vacias: -mov.vacias_entregadas, observaciones: 'Recarga en depósito' });
                 }
-                hablar("Recarga exitosa");
-                cerrarRecarga();
-                cargarStockCamionetaUI();
+                hablar("Recarga exitosa"); cerrarRecarga(); cargarStockCamionetaUI();
             } catch (e) { alert('Error en la recarga: ' + e.message); }
         }
 
@@ -361,172 +331,149 @@
         // VENTAS
         // ==========================================
         async function cargarSelectsVentas() {
-            const selProd = document.getElementById('ventaTipoGarrafa');
-            selProd.innerHTML = '<option value="">-- Producto --</option>';
-            productosCamioneta.forEach(p => {
-                selProd.innerHTML += `<option value="${p.id}" data-precio="${p.precio_venta}">${p.nombre} - $${p.precio_venta}</option>`;
-            });
-
+            const selProd = document.getElementById('ventaTipoGarrafa'); selProd.innerHTML = '<option value="">-- Producto --</option>';
+            productosCamioneta.forEach(p => { selProd.innerHTML += `<option value="${p.id}" data-precio="${p.precio_venta}">${p.nombre} - $${p.precio_venta}</option>`; });
             const { data: clientes } = await supabaseClient.from('clientes').select('*').ilike('tipo', '%comercio%').order('nombre');
-            const datalist = document.getElementById('lista-comercios');
-            datalist.innerHTML = '';
-            if (clientes) {
-                clientesCache = clientes;
-                clientes.forEach(c => {
-                    const option = document.createElement('option');
-                    option.value = c.nombre1 + ' ' + (c.apellido1 || '');
-                    option.dataset.id = c.id;
-                    datalist.appendChild(option);
-                });
-            }
+            const datalist = document.getElementById('lista-comercios'); datalist.innerHTML = '';
+            if (clientes) { clientesCache = clientes; clientes.forEach(c => { const option = document.createElement('option'); option.value = c.nombre1 + ' ' + (c.apellido1 || ''); option.dataset.id = c.id; datalist.appendChild(option); }); }
         }
 
         function actualizarGarrafas() {
-            const tipo = document.getElementById('ventaTipoCliente').value;
-            const seccionComercio = document.getElementById('seccionClienteComercio');
-            const seccionFlete = document.getElementById('seccionFlete');
-
-            document.getElementById('inputClienteId').value = '';
-            document.getElementById('inputClienteNombre').value = '';
-
-            if (tipo === 'comercio' || tipo === 'comercio_mides') {
-                seccionComercio.style.display = 'block';
-                seccionFlete.style.display = 'none'; 
-            } else if (tipo === 'particular' || tipo === 'particular_mides') {
-                seccionComercio.style.display = 'none';
-                seccionFlete.style.display = 'block'; // Particulares ven el aviso de flete
-            } else {
-                seccionComercio.style.display = 'none';
-                seccionFlete.style.display = 'none';
-            }
-            calcularPrecioVenta(); 
-        }
-
-        function seleccionarCliente() {
-            const nombreIngresado = document.getElementById('inputClienteNombre').value;
-            const clienteEncontrado = clientesCache.find(c => (c.nombre1 + ' ' + (c.apellido1 || '')) === nombreIngresado);
-            if (clienteEncontrado) { document.getElementById('inputClienteId').value = clienteEncontrado.id; } 
-            else { document.getElementById('inputClienteId').value = ''; }
-        }
-
-        function calcularPrecioVenta() {
-            const prodSel = document.getElementById('ventaTipoGarrafa');
-            const precioBase = parseFloat(prodSel.options[prodSel.selectedIndex]?.dataset.precio || 0);
-            const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0;
-            const modo = document.getElementById('ventaModoVenta').value;
-            const tipoCliente = document.getElementById('ventaTipoCliente').value;
-
-            document.getElementById('ventaPrecioBaseOculto').value = precioBase;
-            let subtotal = 0;
-
-            if (modo === 'intercambio') {
-                subtotal = precioBase * cantidad;
-            } else if (modo === 'envase_gas') {
-                subtotal = precioBase * cantidad * 1.5;
-            } else if (modo === 'cambio_falla') {
-                subtotal = 0;
-            }
-
-            // LÓGICA AUTOMÁTICA DEL FLETE
-            let fleteAplicado = 0;
-            // Si es particular y NO es un cambio por falla, se suma el flete
-            if ((tipoCliente === 'particular' || tipoCliente === 'particular_mides') && modo !== 'cambio_falla') {
-                fleteAplicado = fleteConfigurado;
-            }
-
-            let total = subtotal + fleteAplicado;
-
-            document.getElementById('ventaTotalOculto').value = total;
-            document.getElementById('ventaTotalPantalla').textContent = "$" + total.toLocaleString('es-UY');
-        }
-
-        function arreglarCantidad() {
-            const input = document.getElementById('ventaCantidad');
-            if (!input.value || parseInt(input.value) < 1) input.value = 1;
+            const tipo = document.getElementById('ventaTipoCliente').value; const seccionComercio = document.getElementById('seccionClienteComercio'); const seccionFlete = document.getElementById('seccionFlete');
+            document.getElementById('inputClienteId').value = ''; document.getElementById('inputClienteNombre').value = '';
+            if (tipo === 'comercio' || tipo === 'comercio_mides') { seccionComercio.style.display = 'block'; seccionFlete.style.display = 'none'; } 
+            else if (tipo === 'particular' || tipo === 'particular_mides') { seccionComercio.style.display = 'none'; seccionFlete.style.display = 'block'; } 
+            else { seccionComercio.style.display = 'none'; seccionFlete.style.display = 'none'; }
             calcularPrecioVenta();
         }
+        function seleccionarCliente() { const nombreIngresado = document.getElementById('inputClienteNombre').value; const clienteEncontrado = clientesCache.find(c => (c.nombre1 + ' ' + (c.apellido1 || '')) === nombreIngresado); if (clienteEncontrado) { document.getElementById('inputClienteId').value = clienteEncontrado.id; } else { document.getElementById('inputClienteId').value = ''; } }
+
+        function calcularPrecioVenta() {
+            const prodSel = document.getElementById('ventaTipoGarrafa'); const precioBase = parseFloat(prodSel.options[prodSel.selectedIndex]?.dataset.precio || 0);
+            const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0; const modo = document.getElementById('ventaModoVenta').value; const tipoCliente = document.getElementById('ventaTipoCliente').value;
+            document.getElementById('ventaPrecioBaseOculto').value = precioBase; let subtotal = 0;
+            if (modo === 'intercambio') { subtotal = precioBase * cantidad; } else if (modo === 'envase_gas') { subtotal = precioBase * cantidad * 1.5; } else if (modo === 'cambio_falla') { subtotal = 0; }
+            let fleteAplicado = 0;
+            if ((tipoCliente === 'particular' || tipoCliente === 'particular_mides') && modo !== 'cambio_falla') { fleteAplicado = fleteConfigurado; }
+            let total = subtotal + fleteAplicado;
+            document.getElementById('ventaTotalOculto').value = total; document.getElementById('ventaTotalPantalla').textContent = "$" + total.toLocaleString('es-UY');
+        }
+        function arreglarCantidad() { const input = document.getElementById('ventaCantidad'); if (!input.value || parseInt(input.value) < 1) input.value = 1; calcularPrecioVenta(); }
 
         async function registrarVenta() {
-            const prodId = document.getElementById('ventaTipoGarrafa').value;
-            const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0;
-            const modo = document.getElementById('ventaModoVenta').value;
-            const total = parseFloat(document.getElementById('ventaTotalOculto').value) || 0;
-            const metodoPago = document.getElementById('ventaModalidad').value;
-            const clienteId = document.getElementById('inputClienteId').value || null;
+            const prodId = document.getElementById('ventaTipoGarrafa').value; const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0;
+            const modo = document.getElementById('ventaModoVenta').value; const total = parseFloat(document.getElementById('ventaTotalOculto').value) || 0;
+            const metodoPago = document.getElementById('ventaModalidad').value; const clienteId = document.getElementById('inputClienteId').value || null;
             const tipoCliente = document.getElementById('ventaTipoCliente').value;
-
             if (!tipoCliente) { alert('Seleccioná el tipo de cliente.'); return; }
             if (!prodId || cantidad <= 0) { alert('Seleccioná un producto y cantidad.'); return; }
-
             const { data: stockCam } = await supabaseClient.from('stock_camioneta').select('llenas').eq('repartidor_id', repartidorActual.id).eq('producto_id', prodId).maybeSingle();
             const stockDisponible = stockCam ? stockCam.llenas : 0;
             if (cantidad > stockDisponible) { alert(`No tenés suficientes garrafas. Solo tienes ${stockDisponible}.`); return; }
-
-            let vaciasRecibidas = 0;
-            let defectuosasRecibidas = 0;
-
-            if (modo === 'intercambio') { vaciasRecibidas = cantidad; } 
-            else if (modo === 'envase_gas') { vaciasRecibidas = 0; } 
-            else if (modo === 'cambio_falla') { defectuosasRecibidas = cantidad; }
-
+            let vaciasRecibidas = 0; let defectuosasRecibidas = 0;
+            if (modo === 'intercambio') { vaciasRecibidas = cantidad; } else if (modo === 'envase_gas') { vaciasRecibidas = 0; } else if (modo === 'cambio_falla') { defectuosasRecibidas = cantidad; }
             const metodoPagoStr = metodoPago.toLowerCase().replace(' en el local', '');
-            
             let obsVenta = 'Venta App - ' + modo + ' - Cliente: ' + tipoCliente;
-
-            const { data: ventaData, error: errorVenta } = await supabaseClient.from('ventas').insert({
-                origen: 'app',
-                tipo_venta: modo,
-                repartidor_id: repartidorActual.id,
-                cliente_id: clienteId,
-                producto_id: prodId,
-                cantidad_llenas: cantidad,
-                cantidad_vacias: vaciasRecibidas,
-                cantidad_defectuosas: defectuosasRecibidas,
-                total: total,
-                metodo_pago: metodoPagoStr,
-                estado: 'Cobrado'
-            }).select().single();
-
+            const { data: ventaData, error: errorVenta } = await supabaseClient.from('ventas').insert({ origen: 'app', tipo_venta: modo, repartidor_id: repartidorActual.id, cliente_id: clienteId, producto_id: prodId, cantidad_llenas: cantidad, cantidad_vacias: vaciasRecibidas, cantidad_defectuosas: defectuosasRecibidas, total: total, metodo_pago: metodoPagoStr, estado: 'Cobrado' }).select().single();
             if (errorVenta) { alert('Error al registrar venta: ' + errorVenta.message); return; }
-
-            const { error: errorStock } = await supabaseClient.rpc('modificar_stock_camioneta', {
-                p_repartidor_id: repartidorActual.id,
-                p_producto_id: prodId,
-                p_llenas: -cantidad,
-                p_vacias: vaciasRecibidas,
-                p_defectuosas: defectuosasRecibidas
-            });
-
+            const { error: errorStock } = await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: prodId, p_llenas: -cantidad, p_vacias: vaciasRecibidas, p_defectuosas: defectuosasRecibidas });
             if (errorStock) { alert('Venta registrada pero error al actualizar camioneta: ' + errorStock.message); return; }
-
-            await supabaseClient.from('movimientos_stock').insert({
-                tipo_mov: 'venta_app',
-                producto_id: prodId,
-                repartidor_id: repartidorActual.id,
-                llenas: -cantidad,
-                vacias: vaciasRecibidas,
-                defectuosas: defectuosasRecibidas,
-                referencia_id: ventaData.id,
-                observaciones: obsVenta
-            });
-
+            await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'venta_app', producto_id: prodId, repartidor_id: repartidorActual.id, llenas: -cantidad, vacias: vaciasRecibidas, defectuosas: defectuosasRecibidas, referencia_id: ventaData.id, observaciones: obsVenta });
             hablar("Venta registrada");
-            
-            document.getElementById('ventaCantidad').value = 1;
-            document.getElementById('ventaModoVenta').value = 'intercambio';
-            document.getElementById('ventaTotalPantalla').textContent = "$0";
-            document.getElementById('inputClienteNombre').value = '';
-            document.getElementById('inputClienteId').value = '';
-            document.getElementById('ventaTipoCliente').value = '';
-            actualizarGarrafas();
-            
+            document.getElementById('ventaCantidad').value = 1; document.getElementById('ventaModoVenta').value = 'intercambio'; document.getElementById('ventaTotalPantalla').textContent = "$0";
+            document.getElementById('inputClienteNombre').value = ''; document.getElementById('inputClienteId').value = ''; document.getElementById('ventaTipoCliente').value = ''; actualizarGarrafas();
             cargarStockCamionetaUI();
         }
 
-        function mostrarPantallaCierre() {
+        // ==========================================
+        // MÓDULO CIERRE DE CAJA
+        // ==========================================
+        async function mostrarPantallaCierre() {
             document.getElementById('moduloVentas').style.display = 'none';
             document.getElementById('moduloCierre').style.display = 'block';
+
+            const hoy = new Date().toISOString().split('T')[0];
+            const { data: ventas, error } = await supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy);
+            if (error) { console.error(error); return; }
+
+            let totalEfectivo = 0, totalTransferencia = 0, totalTarjeta = 0, totalLocal = 0, totalGeneral = 0, totalUnidades = 0, totalCambio = 0;
+            
+            ventas.forEach(v => {
+                totalGeneral += v.total;
+                totalUnidades += v.cantidad_llenas;
+                totalCambio += v.cantidad_defectuosas; // Los cambios falla son las vacías que entran
+                if (v.metodo_pago === 'efectivo') totalEfectivo += v.total;
+                else if (v.metodo_pago === 'transferencia') totalTransferencia += v.total;
+                else if (v.metodo_pago === 'tarjeta') totalTarjeta += v.total;
+                else if (v.metodo_pago === 'pago en el local') totalLocal += v.total;
+            });
+
+            const vuelto = parseFloat(localStorage.getItem('vuelto_inicio')) || 0;
+            const entregadoParcial = parseFloat(localStorage.getItem('entregado_parcial')) || 0;
+            const aEntregar = totalEfectivo + vuelto - entregadoParcial;
+
+            document.getElementById('informeProductos').innerHTML = `<div class="flex justify-between"><span>Llenas entregadas:</span> <span>${totalUnidades}</span></div>`;
+            document.getElementById('informeEfectivo').textContent = "$" + totalEfectivo.toLocaleString('es-UY');
+            document.getElementById('informeTransferencia').textContent = "$" + totalTransferencia.toLocaleString('es-UY');
+            document.getElementById('informeTarjeta').textContent = "$" + totalTarjeta.toLocaleString('es-UY');
+            document.getElementById('informeLocal').textContent = "$" + totalLocal.toLocaleString('es-UY');
+            document.getElementById('informeCambio').textContent = totalCambio;
+            document.getElementById('informeTotalGeneral').textContent = "$" + totalGeneral.toLocaleString('es-UY');
+            document.getElementById('informeVuelto').textContent = "$" + vuelto.toLocaleString('es-UY');
+            document.getElementById('informeEntregadoParcial').textContent = "$" + entregadoParcial.toLocaleString('es-UY');
+            document.getElementById('informeTotalEntregar').textContent = "$" + Math.max(0, aEntregar).toLocaleString('es-UY');
         }
+
+
+                function realizarCierreParcial() {
+            // Consultamos a Supabase en este exacto momento cuánto efectivo se generó
+            const hoy = new Date().toISOString().split('T')[0];
+            supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy).then(({ data, error }) => {
+                if (error) { alert("Error al consultar ventas"); return; }
+                
+                let totalEfectivo = 0;
+                data.forEach(v => { if (v.metodo_pago === 'efectivo') totalEfectivo += v.total; });
+                
+                const vuelto = parseFloat(localStorage.getItem('vuelto_inicio')) || 0;
+                const entregadoPrevio = parseFloat(localStorage.getItem('entregado_parcial')) || 0;
+                const aEntregarAhora = totalEfectivo + vuelto - entregadoPrevio;
+
+                if (aEntregarAhora <= 0) {
+                    alert("No hay efectivo generado para entregar en este momento.");
+                    return;
+                }
+
+                // Confirmación: Entrega TODO lo que tiene en la billetera hasta ahora
+                if (confirm(`Vas a entregar al administrador TODO lo generado hasta ahora: $${aEntregarAhora.toLocaleString('es-UY')}. ¿Confirmar entrega?`)) {
+                    const nuevoEntregadoTotal = entregadoPrevio + aEntregarAhora;
+                    localStorage.setItem('entregado_parcial', nuevoEntregadoTotal.toString());
+                    hablar("Entrega parcial registrada");
+                    mostrarPantallaCierre(); // Refrescar los números (el "A Entregar" debería quedar en $0)
+                }
+            });
+        }
+       
+
+        function cerrarJornada() {
+            if (!confirm('¿Estás seguro de CERRAR LA JORNADA? Esta acción no se puede deshacer.')) return;
+
+            // Limpiar todo el estado de la jornada
+            localStorage.removeItem('jornada_activa');
+            localStorage.removeItem('km_inicio');
+            localStorage.removeItem('vuelto_inicio');
+            localStorage.removeItem('entregado_parcial');
+
+            hablar("Jornada finalizada. Hasta mañana!");
+            
+            // Volver al inicio
+            document.getElementById('moduloCierre').style.display = 'none';
+            document.getElementById('pantallaTrabajo').style.display = 'none';
+            document.getElementById('pantallaInicioJornada').style.display = 'flex';
+            document.getElementById('inputKmInicio').value = '';
+            document.getElementById('inputVuelto').value = '0';
+            cargarDatosJornada();
+        }
+
         function mostrarPantallaVentas() {
             document.getElementById('moduloCierre').style.display = 'none';
             document.getElementById('moduloVentas').style.display = 'block';
