@@ -118,7 +118,6 @@
                     <input type="hidden" id="ventaFleteOculto" value="0">
                     <input type="hidden" id="ventaTotalOculto" value="0">
                     
-                    <!-- CORREGIDO: Values exactos para la base de datos -->
                     <select id="ventaModalidad" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer">
                         <option value="efectivo">💵 Efectivo</option>
                         <option value="transferencia">📱 Transferencia</option>
@@ -191,6 +190,15 @@
         let fleteConfigurado = 0;
         const RECARGO_TARJETA_CREDITO = 100;
 
+        // ==========================================
+        // VARIABLES GPS
+        // ==========================================
+        let gpsWatchId = null;
+        let lastGpsPosition = null;
+        let lastMovementTime = Date.now();
+        let stopCheckInterval = null;
+        let alreadyAskedForThisStop = false;
+
         document.addEventListener('DOMContentLoaded', async () => {
             await cargarRepartidoresLogin();
             await cargarFlete();
@@ -199,8 +207,10 @@
 
         function hablar(mensaje) {
             if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(mensaje);
                 utterance.lang = 'es-UY';
+                utterance.rate = 1.1;
                 window.speechSynthesis.speak(utterance);
             }
         }
@@ -315,11 +325,12 @@
                     await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
                     await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'carga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: -mov.cantidad, observaciones: 'Carga inicial' });
                 }
-                hablar("Jornada iniciada. Buen trabajo!");
+                hablar("Jornada iniciada. Buen trabajo y cuidado en la ruta!");
                 localStorage.setItem('jornada_activa', 'true');
                 document.getElementById('pantallaInicioJornada').style.display = 'none';
                 document.getElementById('pantallaTrabajo').style.display = 'block';
                 inicializarPantallaTrabajo();
+                iniciarSeguimientoGPS(); // INICIAMOS EL GPS
             } catch (e) {
                 alert('Error al cargar el stock: ' + e.message);
             }
@@ -335,6 +346,7 @@
             }
             await cargarStockCamionetaUI();
             await cargarSelectsVentas();
+            iniciarSeguimientoGPS(); // Por si recarga la página, reanudamos el GPS
         }
 
         async function cargarStockCamionetaUI() {
@@ -545,6 +557,22 @@
             if (!tipoCliente) { alert('Seleccioná el tipo de cliente.'); return; }
             if (!prodId || cantidad <= 0) { alert('Seleccioná un producto y cantidad.'); return; }
             
+            const prodNombre = document.getElementById('ventaTipoGarrafa').options[document.getElementById('ventaTipoGarrafa').selectedIndex].text.split(' - ')[0];
+            const metodoTexto = document.getElementById('ventaModalidad').options[document.getElementById('ventaModalidad').selectedIndex].text;
+            const modoTexto = document.getElementById('ventaModoVenta').options[document.getElementById('ventaModoVenta').selectedIndex].text;
+            
+            const mensajeConfirmacion = `CONFIRMAR VENTA:\n\n` +
+                `• Producto: ${prodNombre} (x${cantidad})\n` +
+                `• Modo: ${modoTexto}\n` +
+                `• Pago: ${metodoTexto}\n` +
+                `• TOTAL: $${total.toLocaleString('es-UY')}\n\n` +
+                `¿Los datos son correctos?`;
+
+            if (!confirm(mensajeConfirmacion)) {
+                hablar("Venta cancelada");
+                return; 
+            }
+
             const { data: stockCam } = await supabaseClient.from('stock_camioneta').select('llenas').eq('repartidor_id', repartidorActual.id).eq('producto_id', prodId).maybeSingle();
             const stockDisponible = stockCam ? stockCam.llenas : 0;
             if (cantidad > stockDisponible) { alert(`No tenés suficientes garrafas. Solo tienes ${stockDisponible}.`); return; }
@@ -572,7 +600,7 @@
                 cantidad_vacias: vaciasRecibidas,
                 cantidad_defectuosas: defectuosasRecibidas,
                 total: total,
-                metodo_pago: metodoPago, // CORREGIDO: Enviamos directamente el value del select
+                metodo_pago: metodoPago,
                 estado: estadoVenta
             }).select().single();
             
@@ -599,7 +627,7 @@
                 observaciones: obsVenta
             });
             
-            hablar(estadoVenta === 'Pendiente' ? "Venta fiada registrada" : "Venta registrada");
+            hablar(estadoVenta === 'Pendiente' ? "Venta fiada registrada" : "Venta registrada exitosamente");
             document.getElementById('ventaCantidad').value = 1;
             document.getElementById('ventaModoVenta').value = 'intercambio';
             document.getElementById('ventaTotalPantalla').textContent = "$0";
@@ -667,7 +695,7 @@
 
         async function cobrarPendiente(ventaId) {
             const metodoSelect = document.getElementById(`pagoPend_${ventaId}`);
-            const nuevoMetodo = metodoSelect.value; // CORREGIDO: Tomamos directamente el value (efectivo, tarjeta_credito, etc)
+            const nuevoMetodo = metodoSelect.value;
 
             let updateData = { estado: 'Cobrado', metodo_pago: nuevoMetodo };
 
@@ -689,10 +717,9 @@
                 return;
             }
 
-            hablar("Cobro registrado");
+            hablar("Cobro registrado exitosamente");
             mostrarPendientes();
         }
-
 
         // ==========================================
         // MÓDULO CIERRE DE CAJA
@@ -770,6 +797,7 @@
             localStorage.removeItem('vuelto_inicio');
             localStorage.removeItem('entregado_parcial');
 
+            detenerSeguimientoGPS(); // DETENEMOS EL GPS AL CERRAR
             hablar("Jornada finalizada. Hasta mañana!");
             
             document.getElementById('moduloCierre').style.display = 'none';
@@ -783,6 +811,103 @@
         function mostrarPantallaVentas() {
             document.getElementById('moduloCierre').style.display = 'none';
             document.getElementById('moduloVentas').style.display = 'block';
+        }
+
+        // ==========================================
+        // MÓDULO GPS INTEGRADO CON LA WEB
+        // ==========================================
+        function iniciarSeguimientoGPS() {
+            if (!navigator.geolocation) {
+                console.log("GPS no soportado en este navegador");
+                return;
+            }
+            
+            // Evitar duplicados
+            if (gpsWatchId !== null) return;
+
+            lastMovementTime = Date.now();
+            alreadyAskedForThisStop = false;
+
+            // Verificar paradas cada 15 segundos
+            stopCheckInterval = setInterval(verificarParadaGPS, 15000);
+
+            gpsWatchId = navigator.geolocation.watchPosition(
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const speed = position.coords.speed; // metros por segundo
+                    const accuracy = position.coords.accuracy;
+
+                    if (!lastGpsPosition) lastGpsPosition = {};
+                    lastGpsPosition.lat = lat;
+                    lastGpsPosition.lng = lng;
+
+                    // Enviar ubicación a Supabase cada 15 segundos para el mapa web
+                    const now = Date.now();
+                    if (!lastGpsPosition.lastSent || (now - lastGpsPosition.lastSent) > 15000) {
+                        await supabaseClient.from('ubicaciones').insert({
+                            repartidor_id: repartidorActual.id,
+                            latitud: lat,
+                            longitud: lng,
+                            velocidad: speed || 0,
+                            en_movimiento: speed > 0.5,
+                            precision_gps: accuracy,
+                            timestamp: new Date().toISOString()
+                        });
+                        lastGpsPosition.lastSent = now;
+                    }
+
+                    // Rastrear movimiento para detectar detenciones
+                    if (speed > 0.5) { // Si se mueve a más de 1.8 km/h (0.5 m/s)
+                        lastMovementTime = Date.now();
+                        alreadyAskedForThisStop = false;
+                    }
+                },
+                (error) => console.error("Error GPS:", error),
+                { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+            );
+        }
+
+        function verificarParadaGPS() {
+            if (!lastGpsPosition || !lastGpsPosition.lat) return;
+
+            const timeStopped = Date.now() - lastMovementTime;
+            const twoMinutes = 120000; // 2 minutos en milisegundos
+
+            if (timeStopped >= twoMinutes && !alreadyAskedForThisStop) {
+                alreadyAskedForThisStop = true; // Marcamos para no preguntar cada 15s
+                
+                if (confirm("🛑 Llevas detenido un rato. ¿Realizaste una venta en este lugar?")) {
+                    registrarParadaVentaGPS(lastGpsPosition.lat, lastGpsPosition.lng);
+                }
+            }
+        }
+
+        async function registrarParadaVentaGPS(lat, lng) {
+            // Guardamos en puntos_ruta para que la Web lo detecte automáticamente en el Historial
+            const { error } = await supabaseClient.from('puntos_ruta').insert({
+                nombre: "🛒 Venta en Ruta (App)",
+                latitud: lat,
+                longitud: lng
+            });
+
+            if (!error) {
+                hablar("Parada de venta registrada en el mapa");
+            } else {
+                console.error("Error guardando parada:", error);
+            }
+        }
+
+        function detenerSeguimientoGPS() {
+            if (gpsWatchId !== null) {
+                navigator.geolocation.clearWatch(gpsWatchId);
+                gpsWatchId = null;
+            }
+            if (stopCheckInterval !== null) {
+                clearInterval(stopCheckInterval);
+                stopCheckInterval = null;
+            }
+            lastGpsPosition = null;
         }
 
     </script>
