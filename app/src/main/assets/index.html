@@ -1,4 +1,4 @@
-<meta charset="UTF-8"><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -9,6 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+        .btn-action { transition: all 0.1s ease; }
+        .btn-action:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="pb-20">
@@ -18,9 +20,9 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
             <h1 class="text-3xl font-black text-blue-800 mb-2">App Gas</h1>
             <select id="selectRepartidor" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-lg font-bold text-center mb-4">
-                <option value="">Iniciando...</option>
+                <option value="">Cargando...</option>
             </select>
-            <button onclick="iniciarSesion()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer">Ingresar</button>
+            <button onclick="iniciarSesion()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer btn-action">Ingresar</button>
         </div>
     </div>
 
@@ -31,13 +33,11 @@
             <p class="text-center text-sm mb-4" id="fechaHoy"></p>
             <label class="block text-xs font-bold text-gray-600 mb-1">KM del Vehiculo</label>
             <input type="number" id="inputKmInicio" class="block w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-xl text-center font-black mb-4" placeholder="Ej: 85430">
-            
             <label class="block text-xs font-bold text-green-700 mb-1">💰 Vuelto Inicial ($)</label>
             <input type="number" id="inputVuelto" class="block w-full px-4 py-3 border-2 border-green-300 rounded-lg text-xl text-center font-black mb-4 bg-green-50" placeholder="Ej: 5000" value="0">
-
             <p class="font-bold text-gray-800 mb-2">Stock Inicial (Llenas):</p>
             <div id="contenedorStockInicial" class="grid grid-cols-3 gap-2 mb-4"></div>
-            <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer">EMPEZAR EL DIA</button>
+            <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer btn-action">EMPEZAR EL DIA</button>
         </div>
     </div>
 
@@ -46,17 +46,17 @@
         <div class="bg-blue-900 text-white p-3 sticky top-0 z-50 shadow-lg flex justify-between items-center">
             <h2 class="text-sm font-bold truncate" id="nombreRepartidorTop">Repartidor</h2>
             <div class="flex gap-2">
-                <button onclick="mostrarPendientes()" class="bg-yellow-500 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow">Pendientes</button>
-                <button onclick="mostrarPantallaCierre()" class="bg-orange-500 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow">Caja</button>
+                <button onclick="mostrarPendientes()" class="bg-yellow-500 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow btn-action">Pendientes</button>
+                <button onclick="mostrarPantallaCierre()" class="bg-orange-500 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow btn-action">Caja</button>
             </div>
         </div>
 
-        <!-- MÓDULO 1: VENTAS -->
+        <!-- MÓDULO VENTAS -->
         <div id="moduloVentas" class="p-4 space-y-4">
             <div class="bg-indigo-100 p-3 rounded-xl shadow-sm border-l-4 border-indigo-500">
                 <div class="flex justify-between items-center mb-2">
                     <p class="text-xs font-bold text-indigo-800">STOCK EN CAMIONETA</p>
-                    <button onclick="abrirRecarga()" class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-bold cursor-pointer">+ Recarga</button>
+                    <button onclick="abrirRecarga()" class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-bold cursor-pointer btn-action">+ Recarga</button>
                 </div>
                 <div id="stockGridUI" class="grid grid-cols-3 gap-2"></div>
             </div>
@@ -66,8 +66,8 @@
                 <p id="ultimaRecargaHora" class="text-xs text-blue-600 text-center font-bold mb-2"></p>
                 <div id="contenedorRecarga" class="grid grid-cols-3 gap-2 mb-3"></div>
                 <div class="flex gap-2">
-                    <button onclick="registrarRecarga()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold cursor-pointer">Confirmar Recarga</button>
-                    <button onclick="cerrarRecarga()" class="flex-1 bg-gray-400 text-white py-2 rounded-lg font-bold cursor-pointer">Cancelar</button>
+                    <button onclick="registrarRecarga()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold cursor-pointer btn-action">Confirmar</button>
+                    <button onclick="cerrarRecarga()" class="flex-1 bg-gray-400 text-white py-2 rounded-lg font-bold cursor-pointer btn-action">Cancelar</button>
                 </div>
             </div>
 
@@ -83,9 +83,7 @@
                     </select>
                     
                     <div id="seccionClienteComercio" style="display: none;">
-                        <div id="alertaGeocerca" style="display: none;" class="p-2 bg-green-100 border border-green-400 text-green-800 rounded-lg text-xs font-bold text-center mb-2">
-                            📍 Venta automática en este local
-                        </div>
+                        <div id="alertaGeocerca" style="display: none;" class="p-2 bg-green-100 border border-green-400 text-green-800 rounded-lg text-xs font-bold text-center mb-2">📍 Venta automática en este local</div>
                         <input type="text" id="inputClienteNombre" list="lista-comercios" placeholder="Escriba nombre del comercio..." class="block w-full px-3 py-3 border-2 border-purple-300 rounded-lg text-sm font-bold bg-purple-50 cursor-text" oninput="seleccionarCliente()">
                         <datalist id="lista-comercios"></datalist>
                         <input type="hidden" id="inputClienteId" value="">
@@ -104,8 +102,8 @@
                     </div>
                     
                     <select id="ventaModoVenta" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold cursor-pointer bg-green-50">
-                        <option value="intercambio">🔄 Intercambio (Devuelve vacía)</option>
-                        <option value="envase_gas">🛒 Envase + Gas (No devuelve)</option>
+                        <option value="intercambio">🔄 Intercambio</option>
+                        <option value="envase_gas">🛒 Envase + Gas</option>
                         <option value="cambio_falla">🔄 Cambio / Falla ($0)</option>
                     </select>
 
@@ -126,23 +124,23 @@
                         <option value="pago_local">🏦 Pago en el local</option>
                         <option value="fiado">📝 Fiado (Cobrar después)</option>
                     </select>
-                    <button onclick="registrarVenta()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer shadow-lg">Confirmar Venta</button>
+                    <button onclick="registrarVenta()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer shadow-lg btn-action">Confirmar Venta</button>
                 </div>
             </div>
         </div>
 
-        <!-- MÓDULO COBROS PENDIENTES (FLOTANTE) -->
+        <!-- MÓDULO PENDIENTES -->
         <div id="moduloPendientes" style="display: none;" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 p-4 overflow-y-auto">
             <div class="bg-white rounded-2xl p-6 max-w-lg mx-auto relative">
                 <button onclick="cerrarPendientes()" class="absolute top-3 right-4 text-2xl font-bold text-gray-400 cursor-pointer">✖</button>
-                <h2 class="text-xl font-black text-yellow-700 mb-4 text-center">📝 Cuentas Pendientes de Cobro</h2>
+                <h2 class="text-xl font-black text-yellow-700 mb-4 text-center">📝 Cuentas Pendientes</h2>
                 <div id="listaPendientes" class="space-y-3"></div>
             </div>
         </div>
 
-        <!-- MÓDULO 2: CAJA Y CIERRE -->
+        <!-- MÓDULO CIERRE -->
         <div id="moduloCierre" style="display: none;" class="p-4 space-y-4">
-            <button onclick="mostrarPantallaVentas()" class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 flex items-center justify-center">
+            <button onclick="mostrarPantallaVentas()" class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 flex items-center justify-center btn-action">
                 <span class="mr-2">⬅</span> Volver a Ventas
             </button>
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
@@ -157,32 +155,28 @@
                     <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta Crédito:</span> <span id="informeCredito">$0</span></div>
                     <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta Débito:</span> <span id="informeDebito">$0</span></div>
                     <div class="flex justify-between font-bold text-orange-900"><span>Pago en el local:</span> <span id="informeLocal">$0</span></div>
-                    
                     <hr class="border-orange-300 my-2">
-                    <p class="font-black text-yellow-700 mb-2">⚠️ Ventas Fiadas (Pendientes):</p>
+                    <p class="font-black text-yellow-700 mb-2">⚠️ Ventas Fiadas:</p>
                     <div class="flex justify-between font-bold text-yellow-800"><span>Total Fiado:</span> <span id="informeFiado" class="text-red-600">$0</span></div>
-                    
                     <hr class="border-orange-300 my-2">
-                    <div class="flex justify-between font-bold text-orange-900"><span>Envases vacios (Cambio):</span> <span id="informeCambio" class="text-red-600">0</span></div>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Envases vacios:</span> <span id="informeCambio" class="text-red-600">0</span></div>
                     <div class="flex justify-between font-black text-orange-900 text-lg mt-1"><span>TOTAL VENDIDO:</span> <span id="informeTotalGeneral">$0</span></div>
-                    
                     <hr class="border-orange-300 my-2">
                     <p class="font-black text-gray-700 mb-2">Cálculo de Efectivo a Entregar:</p>
                     <div class="flex justify-between font-bold text-green-700"><span>Vuelto Inicial:</span> <span id="informeVuelto">$0</span></div>
                     <div class="flex justify-between font-bold text-red-700"><span>Entregado Parcial:</span> <span id="informeEntregadoParcial">$0</span></div>
                     <div class="flex justify-between font-black text-green-700 text-lg mt-1"><span>A ENTREGAR (Efectivo):</span> <span id="informeTotalEntregar">$0</span></div>
                 </div>
-                <button onclick="realizarCierreParcial()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2">Entregar Efectivo (Parcial)</button>
-                <button onclick="cerrarJornada()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer">CERRAR JORNADA FINAL</button>
+                <button onclick="realizarCierreParcial()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 btn-action">Entregar Efectivo (Parcial)</button>
+                <button onclick="cerrarJornada()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer btn-action">CERRAR JORNADA FINAL</button>
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
     <script>
         const SUPABASE_URL = 'https://plnodukthcnnwmxlzwsm.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsbm9kdWt0aGNubndteGx6d3NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTkwMTcsImV4cCI6MjA5NTYzNTAxN30.WkTzFvNiM0BotwTLtxzQpq9-b08stueIlsp8K0b9iq8';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let repartidorActual = { id: '', nombre: '' };
         let productosCamioneta = [];
@@ -190,9 +184,7 @@
         let fleteConfigurado = 0;
         const RECARGO_TARJETA_CREDITO = 100;
 
-        // ==========================================
-        // VARIABLES GPS
-        // ==========================================
+        // Variables GPS
         let gpsWatchId = null;
         let lastGpsPosition = null;
         let lastMovementTime = Date.now();
@@ -210,32 +202,41 @@
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(mensaje);
                 utterance.lang = 'es-UY';
-                utterance.rate = 1.1;
                 window.speechSynthesis.speak(utterance);
             }
         }
 
         async function cargarFlete() {
-            const { data } = await supabaseClient.from('configuraciones').select('valor').eq('clave', 'flete_reparto').maybeSingle();
-            if (data) fleteConfigurado = parseFloat(data.valor) || 0;
-            document.getElementById('textoFleteAuto').textContent = "$" + fleteConfigurado.toLocaleString('es-UY');
+            try {
+                const { data, error } = await db.from('configuraciones').select('valor').eq('clave', 'flete_reparto').maybeSingle();
+                if (error) throw error;
+                if (data) fleteConfigurado = parseFloat(data.valor) || 0;
+                document.getElementById('textoFleteAuto').textContent = "$" + fleteConfigurado.toLocaleString('es-UY');
+            } catch (e) {
+                console.error("Error cargando flete:", e);
+            }
         }
 
         // ==========================================
-        // MÓDULO LOGIN
+        // LOGIN Y SESIÓN
         // ==========================================
         async function cargarRepartidoresLogin() {
             const select = document.getElementById('selectRepartidor');
             select.innerHTML = '<option value="">Cargando...</option>';
-            const { data, error } = await supabaseClient.from('repartidores').select('*').eq('activo', true).order('nombre');
-            if (error) { select.innerHTML = '<option value="">Error</option>'; return; }
-            select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
-            data.forEach(rep => {
-                const option = document.createElement('option');
-                option.value = rep.id;
-                option.textContent = rep.nombre;
-                select.appendChild(option);
-            });
+            try {
+                const { data, error } = await db.from('repartidores').select('*').eq('activo', true).order('nombre');
+                if (error) throw error;
+                select.innerHTML = '<option value="">-- Seleccione su nombre --</option>';
+                data.forEach(rep => {
+                    const option = document.createElement('option');
+                    option.value = rep.id;
+                    option.textContent = rep.nombre;
+                    select.appendChild(option);
+                });
+            } catch (e) {
+                select.innerHTML = '<option value="">Error al cargar</option>';
+                alert("Error de conexión al cargar repartidores: " + e.message);
+            }
         }
 
         function iniciarSesion() {
@@ -276,97 +277,117 @@
         }
 
         // ==========================================
-        // MÓDULO INICIO JORNADA
+        // INICIO JORNADA
         // ==========================================
         async function cargarDatosJornada() {
             const contenedor = document.getElementById('contenedorStockInicial');
             contenedor.innerHTML = '<p class="col-span-3 text-center text-xs">Cargando...</p>';
-            const { data, error } = await supabaseClient.from('productos').select('*').in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45']).order('nombre');
-            if (error || !data) { contenedor.innerHTML = '<p class="col-span-3 text-red-500 text-xs">Error</p>'; return; }
-            productosCamioneta = data;
-            contenedor.innerHTML = '';
-            productosCamioneta.forEach(prod => {
-                const div = document.createElement('div');
-                div.className = 'bg-gray-100 p-2 rounded-lg text-center';
-                div.innerHTML = `<label class="block text-xs font-bold text-gray-700 mb-1">${prod.nombre}</label><input type="number" id="stockInicial_${prod.id}" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">`;
-                contenedor.appendChild(div);
-            });
+            try {
+                const { data, error } = await db.from('productos').select('*').in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45']).order('nombre');
+                if (error) throw error;
+                productosCamioneta = data;
+                contenedor.innerHTML = '';
+                productosCamioneta.forEach(prod => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-100 p-2 rounded-lg text-center';
+                    div.innerHTML = `<label class="block text-xs font-bold text-gray-700 mb-1">${prod.nombre}</label><input type="number" id="stockInicial_${prod.id}" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">`;
+                    contenedor.appendChild(div);
+                });
+            } catch (e) {
+                contenedor.innerHTML = '<p class="col-span-3 text-red-500 text-xs">Error al cargar productos</p>';
+                alert("Error cargando productos: " + e.message);
+            }
         }
 
         async function registrarInicioJornada() {
             const kmInicio = document.getElementById('inputKmInicio').value;
             const vuelto = document.getElementById('inputVuelto').value;
             if (!kmInicio || parseInt(kmInicio) <= 0) { alert('Ingresá los KM del vehículo.'); return; }
-            if (!vuelto || parseFloat(vuelto) < 0) { alert('Ingresá el vuelto inicial (puede ser 0).'); return; }
+            if (!vuelto || parseFloat(vuelto) < 0) { alert('Ingresá el vuelto inicial.'); return; }
             
             localStorage.setItem('km_inicio', kmInicio);
             localStorage.setItem('vuelto_inicio', vuelto);
             localStorage.setItem('entregado_parcial', '0');
 
-            const { data: stockDeposito } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
-            let cargaValida = true;
-            let movimientos = [];
-            
-            for (const prod of productosCamioneta) {
-                const inputCant = parseInt(document.getElementById(`stockInicial_${prod.id}`).value) || 0;
-                const stockDisponible = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
-                if (inputCant > stockDisponible) {
-                    alert(`Stock insuficiente en depósito para ${prod.nombre}. Hay ${stockDisponible}.`);
-                    cargaValida = false;
-                    break;
-                }
-                if (inputCant > 0) movimientos.push({ producto_id: prod.id, cantidad: inputCant });
-            }
-            if (!cargaValida) return;
-
             try {
-                for (const mov of movimientos) {
-                    await supabaseClient.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
-                    await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
-                    await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'carga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: -mov.cantidad, observaciones: 'Carga inicial' });
+                const { data: stockDeposito, error: errStock } = await db.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
+                if(errStock) throw errStock;
+
+                let cargaValida = true;
+                let movimientos = [];
+                
+                for (const prod of productosCamioneta) {
+                    const inputCant = parseInt(document.getElementById(`stockInicial_${prod.id}`).value) || 0;
+                    const stockDisponible = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
+                    if (inputCant > stockDisponible) {
+                        alert(`Stock insuficiente para ${prod.nombre}. Hay ${stockDisponible}.`);
+                        cargaValida = false;
+                        break;
+                    }
+                    if (inputCant > 0) movimientos.push({ producto_id: prod.id, cantidad: inputCant });
                 }
-                hablar("Jornada iniciada. Buen trabajo y cuidado en la ruta!");
+                if (!cargaValida) return;
+
+                for (const mov of movimientos) {
+                    const rpc1 = await db.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
+                    if(rpc1.error) throw rpc1.error;
+                    
+                    const rpc2 = await db.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.cantidad, p_vacias: 0, p_defectuosas: 0 });
+                    if(rpc2.error) throw rpc2.error;
+                    
+                    const ins = await db.from('movimientos_stock').insert({ tipo_mov: 'carga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: -mov.cantidad, observaciones: 'Carga inicial' });
+                    if(ins.error) throw ins.error;
+                }
+                
+                hablar("Jornada iniciada. Buen trabajo!");
                 localStorage.setItem('jornada_activa', 'true');
                 document.getElementById('pantallaInicioJornada').style.display = 'none';
                 document.getElementById('pantallaTrabajo').style.display = 'block';
                 inicializarPantallaTrabajo();
-                iniciarSeguimientoGPS(); // INICIAMOS EL GPS
             } catch (e) {
                 alert('Error al cargar el stock: ' + e.message);
             }
         }
 
         // ==========================================
-        // MÓDULO TRABAJO
+        // TRABAJO Y STOCK
         // ==========================================
         async function inicializarPantallaTrabajo() {
             if (productosCamioneta.length === 0) {
-                const { data } = await supabaseClient.from('productos').select('*').in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45']).order('nombre');
-                if (data) productosCamioneta = data;
+                try {
+                    const { data } = await db.from('productos').select('*').in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45']).order('nombre');
+                    if (data) productosCamioneta = data;
+                } catch (e) { console.error(e); }
             }
             await cargarStockCamionetaUI();
             await cargarSelectsVentas();
-            iniciarSeguimientoGPS(); // Por si recarga la página, reanudamos el GPS
+            iniciarSeguimientoGPS();
         }
 
         async function cargarStockCamionetaUI() {
             const grid = document.getElementById('stockGridUI');
             grid.innerHTML = '';
-            const { data: stock } = await supabaseClient.from('stock_camioneta').select('*, productos(nombre)').eq('repartidor_id', repartidorActual.id);
-            let htmlGrid = '';
-            productosCamioneta.forEach(prod => {
-                const item = stock?.find(s => s.producto_id === prod.id);
-                const llenas = item ? item.llenas : 0;
-                const vacias = item ? item.vacias : 0;
-                const defect = item ? (item.defectuosas || 0) : 0;
-                htmlGrid += `<div class="bg-white p-2 rounded-lg text-center shadow-sm">
-                    <p class="text-[10px] font-bold text-gray-500 truncate">${prod.nombre.replace('Garrafa ', '')}</p>
-                    <p class="text-2xl font-black text-green-700">${llenas}</p>
-                    <p class="text-[10px] font-bold text-gray-400">Vac: ${vacias}</p>
-                    <p class="text-[10px] font-bold text-red-500">Def: ${defect}</p>
-                </div>`;
-            });
-            grid.innerHTML = htmlGrid;
+            try {
+                const { data: stock, error } = await db.from('stock_camioneta').select('*, productos(nombre)').eq('repartidor_id', repartidorActual.id);
+                if (error) throw error;
+                
+                let htmlGrid = '';
+                productosCamioneta.forEach(prod => {
+                    const item = stock?.find(s => s.producto_id === prod.id);
+                    const llenas = item ? item.llenas : 0;
+                    const vacias = item ? item.vacias : 0;
+                    const defect = item ? (item.defectuosas || 0) : 0;
+                    htmlGrid += `<div class="bg-white p-2 rounded-lg text-center shadow-sm">
+                        <p class="text-[10px] font-bold text-gray-500 truncate">${prod.nombre.replace('Garrafa ', '')}</p>
+                        <p class="text-2xl font-black text-green-700">${llenas}</p>
+                        <p class="text-[10px] font-bold text-gray-400">Vac: ${vacias}</p>
+                        <p class="text-[10px] font-bold text-red-500">Def: ${defect}</p>
+                    </div>`;
+                });
+                grid.innerHTML = htmlGrid;
+            } catch (e) {
+                console.error("Error cargando stock UI:", e);
+            }
         }
 
         async function abrirRecarga() {
@@ -375,70 +396,74 @@
             seccion.style.display = 'block';
             contenedor.innerHTML = '';
             
-            const { data: lastMov } = await supabaseClient.from('movimientos_stock')
-                .select('created_at')
-                .eq('repartidor_id', repartidorActual.id)
-                .eq('tipo_mov', 'recarga_camioneta')
-                .order('created_at', { ascending: false })
-                .limit(1);
-                
-            if (lastMov && lastMov.length > 0) {
-                const fecha = new Date(lastMov[0].created_at);
-                document.getElementById('ultimaRecargaHora').textContent = "Última recarga: " + fecha.toLocaleTimeString('es-UY');
-            } else {
-                document.getElementById('ultimaRecargaHora').textContent = "Sin recargas hoy";
-            }
+            try {
+                const { data: lastMov } = await db.from('movimientos_stock')
+                    .select('created_at')
+                    .eq('repartidor_id', repartidorActual.id)
+                    .eq('tipo_mov', 'recarga_camioneta')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                    
+                if (lastMov && lastMov.length > 0) {
+                    document.getElementById('ultimaRecargaHora').textContent = "Última recarga: " + new Date(lastMov[0].created_at).toLocaleTimeString('es-UY');
+                } else {
+                    document.getElementById('ultimaRecargaHora').textContent = "Sin recargas hoy";
+                }
 
-            const { data: stockCamioneta } = await supabaseClient.from('stock_camioneta').select('*').eq('repartidor_id', repartidorActual.id);
-            
-            productosCamioneta.forEach(prod => {
-                const item = stockCamioneta?.find(s => s.producto_id === prod.id);
-                const vaciasActuales = item ? item.vacias : 0;
-                const div = document.createElement('div');
-                div.className = 'bg-white p-2 rounded-lg text-center shadow-sm border';
-                div.innerHTML = `
-                    <label class="block text-xs font-bold text-gray-700 mb-1">${prod.nombre.replace('Garrafa ', '')}</label>
-                    <div class="mb-1">
-                        <label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label>
-                        <input type="number" id="recVac_${prod.id}" min="0" max="${vaciasActuales}" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label>
-                        <input type="number" id="recLlen_${prod.id}" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700">
-                    </div>`;
-                contenedor.appendChild(div);
-            });
+                const { data: stockCamioneta } = await db.from('stock_camioneta').select('*').eq('repartidor_id', repartidorActual.id);
+                
+                productosCamioneta.forEach(prod => {
+                    const item = stockCamioneta?.find(s => s.producto_id === prod.id);
+                    const vaciasActuales = item ? item.vacias : 0;
+                    const div = document.createElement('div');
+                    div.className = 'bg-white p-2 rounded-lg text-center shadow-sm border';
+                    div.innerHTML = `
+                        <label class="block text-xs font-bold text-gray-700 mb-1">${prod.nombre.replace('Garrafa ', '')}</label>
+                        <div class="mb-1">
+                            <label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label>
+                            <input type="number" id="recVac_${prod.id}" min="0" max="${vaciasActuales}" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label>
+                            <input type="number" id="recLlen_${prod.id}" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700">
+                        </div>`;
+                    contenedor.appendChild(div);
+                });
+            } catch (e) {
+                alert("Error al abrir recarga: " + e.message);
+            }
         }
         
-        function cerrarRecarga() {
-            document.getElementById('seccionRecarga').style.display = 'none';
-        }
+        function cerrarRecarga() { document.getElementById('seccionRecarga').style.display = 'none'; }
 
         async function registrarRecarga() {
-            const { data: stockDeposito } = await supabaseClient.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
-            let movimientos = [];
-            let valido = true;
-            
-            for (const prod of productosCamioneta) {
-                const vacEnt = parseInt(document.getElementById(`recVac_${prod.id}`).value) || 0;
-                const llenSac = parseInt(document.getElementById(`recLlen_${prod.id}`).value) || 0;
-                if (llenSac > 0) {
-                    const dispDep = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
-                    if (llenSac > dispDep) {
-                        alert(`No hay llenas en depósito para ${prod.nombre}. Solo hay ${dispDep}.`);
-                        valido = false;
-                        break;
-                    }
-                }
-                if (vacEnt > 0 || llenSac > 0) movimientos.push({ producto_id: prod.id, vacias_entregadas: vacEnt, llenas_sacadas: llenSac });
-            }
-            if (!valido) return;
-
             try {
+                const { data: stockDeposito } = await db.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p => p.id));
+                let movimientos = [];
+                let valido = true;
+                
+                for (const prod of productosCamioneta) {
+                    const vacEnt = parseInt(document.getElementById(`recVac_${prod.id}`).value) || 0;
+                    const llenSac = parseInt(document.getElementById(`recLlen_${prod.id}`).value) || 0;
+                    if (llenSac > 0) {
+                        const dispDep = stockDeposito.find(s => s.producto_id === prod.id)?.llenas || 0;
+                        if (llenSac > dispDep) {
+                            alert(`No hay llenas en depósito para ${prod.nombre}. Solo hay ${dispDep}.`);
+                            valido = false;
+                            break;
+                        }
+                    }
+                    if (vacEnt > 0 || llenSac > 0) movimientos.push({ producto_id: prod.id, vacias_entregadas: vacEnt, llenas_sacadas: llenSac });
+                }
+                if (!valido) return;
+
                 for (const mov of movimientos) {
-                    await supabaseClient.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.llenas_sacadas, p_vacias: mov.vacias_entregadas, p_defectuosas: 0 });
-                    await supabaseClient.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.llenas_sacadas, p_vacias: -mov.vacias_entregadas, p_defectuosas: 0 });
-                    await supabaseClient.from('movimientos_stock').insert({ tipo_mov: 'recarga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: mov.llenas_sacadas, vacias: -mov.vacias_entregadas, observaciones: 'Recarga en depósito' });
+                    const r1 = await db.rpc('modificar_stock_deposito', { p_producto_id: mov.producto_id, p_llenas: -mov.llenas_sacadas, p_vacias: mov.vacias_entregadas, p_defectuosas: 0 });
+                    if(r1.error) throw r1.error;
+                    const r2 = await db.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: mov.producto_id, p_llenas: mov.llenas_sacadas, p_vacias: -mov.vacias_entregadas, p_defectuosas: 0 });
+                    if(r2.error) throw r2.error;
+                    const r3 = await db.from('movimientos_stock').insert({ tipo_mov: 'recarga_camioneta', producto_id: mov.producto_id, repartidor_id: repartidorActual.id, llenas: mov.llenas_sacadas, vacias: -mov.vacias_entregadas, observaciones: 'Recarga en depósito' });
+                    if(r3.error) throw r3.error;
                 }
                 hablar("Recarga exitosa");
                 cerrarRecarga();
@@ -458,53 +483,37 @@
                 selProd.innerHTML += `<option value="${p.id}" data-precio="${p.precio_venta}">${p.nombre} - $${p.precio_venta}</option>`;
             });
             
-            const { data: clientes } = await supabaseClient.from('clientes').select('*').ilike('tipo', '%comercio%').order('nombre');
-            const datalist = document.getElementById('lista-comercios');
-            datalist.innerHTML = '';
-            if (clientes) {
-                clientesCache = clientes;
-                clientes.forEach(c => {
-                    const option = document.createElement('option');
-                    option.value = c.nombre1 + ' ' + (c.apellido1 || '');
-                    option.dataset.id = c.id;
-                    datalist.appendChild(option);
-                });
-            }
+            try {
+                const { data: clientes } = await db.from('clientes').select('*').ilike('tipo', '%comercio%').order('nombre');
+                const datalist = document.getElementById('lista-comercios');
+                datalist.innerHTML = '';
+                if (clientes) {
+                    clientesCache = clientes;
+                    clientes.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = c.nombre1 + ' ' + (c.apellido1 || '');
+                        option.dataset.id = c.id;
+                        datalist.appendChild(option);
+                    });
+                }
+            } catch (e) { console.error("Error cargando clientes:", e); }
         }
 
         function actualizarGarrafas() {
             const tipo = document.getElementById('ventaTipoCliente').value;
-            const seccionComercio = document.getElementById('seccionClienteComercio');
-            const seccionFlete = document.getElementById('seccionFlete');
-            const alertaGeocerca = document.getElementById('alertaGeocerca');
-            
             document.getElementById('inputClienteId').value = '';
             document.getElementById('inputClienteNombre').value = '';
-            
-            if (tipo === 'comercio' || tipo === 'comercio_mides') {
-                seccionComercio.style.display = 'block';
-                seccionFlete.style.display = 'none';
-                alertaGeocerca.style.display = 'none';
-            } else if (tipo === 'particular' || tipo === 'particular_mides') {
-                seccionComercio.style.display = 'none';
-                seccionFlete.style.display = 'block';
-            } else {
-                seccionComercio.style.display = 'none';
-                seccionFlete.style.display = 'none';
-            }
+            document.getElementById('seccionClienteComercio').style.display = (tipo === 'comercio' || tipo === 'comercio_mides') ? 'block' : 'none';
+            document.getElementById('seccionFlete').style.display = (tipo === 'particular' || tipo === 'particular_mides') ? 'block' : 'none';
+            document.getElementById('alertaGeocerca').style.display = 'none';
             calcularPrecioVenta();
         }
         
         function seleccionarCliente() {
             const nombreIngresado = document.getElementById('inputClienteNombre').value;
             const clienteEncontrado = clientesCache.find(c => (c.nombre1 + ' ' + (c.apellido1 || '')) === nombreIngresado);
-            if (clienteEncontrado) {
-                document.getElementById('inputClienteId').value = clienteEncontrado.id;
-                document.getElementById('alertaGeocerca').style.display = 'block';
-            } else {
-                document.getElementById('inputClienteId').value = '';
-                document.getElementById('alertaGeocerca').style.display = 'none';
-            }
+            document.getElementById('inputClienteId').value = clienteEncontrado ? clienteEncontrado.id : '';
+            document.getElementById('alertaGeocerca').style.display = clienteEncontrado ? 'block' : 'none';
         }
 
         function calcularPrecioVenta() {
@@ -515,12 +524,9 @@
             const tipoCliente = document.getElementById('ventaTipoCliente').value;
             const metodoPago = document.getElementById('ventaModalidad').value;
             
-            document.getElementById('ventaPrecioBaseOculto').value = precioBase;
             let subtotal = 0;
-            
-            if (modo === 'intercambio') { subtotal = precioBase * cantidad; }
-            else if (modo === 'envase_gas') { subtotal = precioBase * cantidad * 1.5; }
-            else if (modo === 'cambio_falla') { subtotal = 0; }
+            if (modo === 'intercambio') subtotal = precioBase * cantidad;
+            else if (modo === 'envase_gas') subtotal = precioBase * cantidad * 1.5;
             
             let fleteAplicado = 0;
             if ((tipoCliente === 'particular' || tipoCliente === 'particular_mides') && modo !== 'cambio_falla') {
@@ -534,7 +540,6 @@
             
             let total = subtotal + fleteAplicado + recargoCredito;
             
-            document.getElementById('ventaFleteOculto').value = fleteAplicado;
             document.getElementById('ventaTotalOculto').value = total;
             document.getElementById('ventaTotalPantalla').textContent = "$" + total.toLocaleString('es-UY');
         }
@@ -546,243 +551,181 @@
         }
 
         async function registrarVenta() {
-            const prodId = document.getElementById('ventaTipoGarrafa').value;
-            const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0;
-            const modo = document.getElementById('ventaModoVenta').value;
-            const total = parseFloat(document.getElementById('ventaTotalOculto').value) || 0;
-            const metodoPago = document.getElementById('ventaModalidad').value;
-            const clienteId = document.getElementById('inputClienteId').value || null;
-            const tipoCliente = document.getElementById('ventaTipoCliente').value;
-            
-            if (!tipoCliente) { alert('Seleccioná el tipo de cliente.'); return; }
-            if (!prodId || cantidad <= 0) { alert('Seleccioná un producto y cantidad.'); return; }
-            
-            const prodNombre = document.getElementById('ventaTipoGarrafa').options[document.getElementById('ventaTipoGarrafa').selectedIndex].text.split(' - ')[0];
-            const metodoTexto = document.getElementById('ventaModalidad').options[document.getElementById('ventaModalidad').selectedIndex].text;
-            const modoTexto = document.getElementById('ventaModoVenta').options[document.getElementById('ventaModoVenta').selectedIndex].text;
-            
-            const mensajeConfirmacion = `CONFIRMAR VENTA:\n\n` +
-                `• Producto: ${prodNombre} (x${cantidad})\n` +
-                `• Modo: ${modoTexto}\n` +
-                `• Pago: ${metodoTexto}\n` +
-                `• TOTAL: $${total.toLocaleString('es-UY')}\n\n` +
-                `¿Los datos son correctos?`;
+            try {
+                const prodId = document.getElementById('ventaTipoGarrafa').value;
+                const cantidad = parseInt(document.getElementById('ventaCantidad').value) || 0;
+                const modo = document.getElementById('ventaModoVenta').value;
+                const total = parseFloat(document.getElementById('ventaTotalOculto').value) || 0;
+                const metodoPago = document.getElementById('ventaModalidad').value;
+                const clienteId = document.getElementById('inputClienteId').value || null;
+                const tipoCliente = document.getElementById('ventaTipoCliente').value;
+                
+                if (!tipoCliente) { alert('Seleccioná el tipo de cliente.'); return; }
+                if (!prodId || cantidad <= 0) { alert('Seleccioná un producto y cantidad.'); return; }
+                
+                const prodNombre = document.getElementById('ventaTipoGarrafa').options[document.getElementById('ventaTipoGarrafa').selectedIndex].text.split(' - ')[0];
+                const metodoTexto = document.getElementById('ventaModalidad').options[document.getElementById('ventaModalidad').selectedIndex].text;
+                const modoTexto = document.getElementById('ventaModoVenta').options[document.getElementById('ventaModoVenta').selectedIndex].text;
+                
+                if (!confirm(`CONFIRMAR VENTA:\n• Producto: ${prodNombre} (x${cantidad})\n• Modo: ${modoTexto}\n• Pago: ${metodoTexto}\n• TOTAL: $${total.toLocaleString('es-UY')}\n\n¿Es correcto?`)) {
+                    hablar("Venta cancelada");
+                    return; 
+                }
 
-            if (!confirm(mensajeConfirmacion)) {
-                hablar("Venta cancelada");
-                return; 
+                const { data: stockCam } = await db.from('stock_camioneta').select('llenas').eq('repartidor_id', repartidorActual.id).eq('producto_id', prodId).maybeSingle();
+                const stockDisponible = stockCam ? stockCam.llenas : 0;
+                if (cantidad > stockDisponible) { alert(`No tenés suficientes garrafas. Solo tienes ${stockDisponible}.`); return; }
+                
+                let vaciasRecibidas = (modo === 'intercambio') ? cantidad : 0;
+                let defectuosasRecibidas = (modo === 'cambio_falla') ? cantidad : 0;
+                let estadoVenta = (metodoPago === 'fiado') ? 'Pendiente' : 'Cobrado';
+
+                const { data: ventaData, error: errorVenta } = await db.from('ventas').insert({
+                    origen: 'app', tipo_venta: modo, repartidor_id: repartidorActual.id, cliente_id: clienteId, producto_id: prodId,
+                    cantidad_llenas: cantidad, cantidad_vacias: vaciasRecibidas, cantidad_defectuosas: defectuosasRecibidas,
+                    total: total, metodo_pago: metodoPago, estado: estadoVenta
+                }).select().single();
+                if (errorVenta) throw errorVenta;
+                
+                const { error: errorStock } = await db.rpc('modificar_stock_camioneta', { p_repartidor_id: repartidorActual.id, p_producto_id: prodId, p_llenas: -cantidad, p_vacias: vaciasRecibidas, p_defectuosas: defectuosasRecibidas });
+                if (errorStock) throw errorStock;
+                
+                await db.from('movimientos_stock').insert({ tipo_mov: 'venta_app', producto_id: prodId, repartidor_id: repartidorActual.id, llenas: -cantidad, vacias: vaciasRecibidas, defectuosas: defectuosasRecibidas, referencia_id: ventaData.id, observaciones: 'Venta App' });
+                
+                hablar(estadoVenta === 'Pendiente' ? "Venta fiada registrada" : "Venta registrada exitosamente");
+                document.getElementById('ventaCantidad').value = 1;
+                document.getElementById('ventaModoVenta').value = 'intercambio';
+                document.getElementById('ventaTotalPantalla').textContent = "$0";
+                document.getElementById('inputClienteNombre').value = '';
+                document.getElementById('inputClienteId').value = '';
+                document.getElementById('ventaTipoCliente').value = '';
+                document.getElementById('ventaModalidad').value = 'efectivo';
+                actualizarGarrafas();
+                cargarStockCamionetaUI();
+            } catch (e) {
+                alert('Error al registrar venta: ' + e.message);
             }
-
-            const { data: stockCam } = await supabaseClient.from('stock_camioneta').select('llenas').eq('repartidor_id', repartidorActual.id).eq('producto_id', prodId).maybeSingle();
-            const stockDisponible = stockCam ? stockCam.llenas : 0;
-            if (cantidad > stockDisponible) { alert(`No tenés suficientes garrafas. Solo tienes ${stockDisponible}.`); return; }
-            
-            let vaciasRecibidas = 0;
-            let defectuosasRecibidas = 0;
-            if (modo === 'intercambio') { vaciasRecibidas = cantidad; }
-            else if (modo === 'envase_gas') { vaciasRecibidas = 0; }
-            else if (modo === 'cambio_falla') { defectuosasRecibidas = cantidad; }
-            
-            let estadoVenta = 'Cobrado';
-            if (metodoPago === 'fiado') {
-                estadoVenta = 'Pendiente';
-            }
-
-            let obsVenta = 'Venta App - ' + modo + ' - Cliente: ' + tipoCliente;
-            
-            const { data: ventaData, error: errorVenta } = await supabaseClient.from('ventas').insert({
-                origen: 'app',
-                tipo_venta: modo,
-                repartidor_id: repartidorActual.id,
-                cliente_id: clienteId,
-                producto_id: prodId,
-                cantidad_llenas: cantidad,
-                cantidad_vacias: vaciasRecibidas,
-                cantidad_defectuosas: defectuosasRecibidas,
-                total: total,
-                metodo_pago: metodoPago,
-                estado: estadoVenta
-            }).select().single();
-            
-            if (errorVenta) { alert('Error al registrar venta: ' + errorVenta.message); return; }
-            
-            const { error: errorStock } = await supabaseClient.rpc('modificar_stock_camioneta', {
-                p_repartidor_id: repartidorActual.id,
-                p_producto_id: prodId,
-                p_llenas: -cantidad,
-                p_vacias: vaciasRecibidas,
-                p_defectuosas: defectuosasRecibidas
-            });
-            
-            if (errorStock) { alert('Venta registrada pero error al actualizar camioneta: ' + errorStock.message); return; }
-            
-            await supabaseClient.from('movimientos_stock').insert({
-                tipo_mov: 'venta_app',
-                producto_id: prodId,
-                repartidor_id: repartidorActual.id,
-                llenas: -cantidad,
-                vacias: vaciasRecibidas,
-                defectuosas: defectuosasRecibidas,
-                referencia_id: ventaData.id,
-                observaciones: obsVenta
-            });
-            
-            hablar(estadoVenta === 'Pendiente' ? "Venta fiada registrada" : "Venta registrada exitosamente");
-            document.getElementById('ventaCantidad').value = 1;
-            document.getElementById('ventaModoVenta').value = 'intercambio';
-            document.getElementById('ventaTotalPantalla').textContent = "$0";
-            document.getElementById('inputClienteNombre').value = '';
-            document.getElementById('inputClienteId').value = '';
-            document.getElementById('ventaTipoCliente').value = '';
-            document.getElementById('ventaModalidad').value = 'efectivo';
-            actualizarGarrafas();
-            cargarStockCamionetaUI();
         }
 
         // ==========================================
-        // MÓDULO COBROS PENDIENTES
+        // PENDIENTES
         // ==========================================
         async function mostrarPendientes() {
             const modal = document.getElementById('moduloPendientes');
             const lista = document.getElementById('listaPendientes');
-            lista.innerHTML = '<p class="text-center text-gray-500 py-4">Cargando deudas...</p>';
+            lista.innerHTML = '<p class="text-center text-gray-500 py-4">Cargando...</p>';
             modal.style.display = 'block';
 
-            const { data: pendientes, error } = await supabaseClient
-                .from('ventas')
-                .select('*')
-                .eq('repartidor_id', repartidorActual.id)
-                .eq('estado', 'Pendiente');
+            try {
+                const { data: pendientes, error } = await db.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).eq('estado', 'Pendiente');
+                if (error) throw error;
+                
+                if (!pendientes || pendientes.length === 0) {
+                    lista.innerHTML = '<p class="text-center text-green-600 font-bold py-4">¡No hay ventas fiadas!</p>';
+                    return;
+                }
 
-            if (error) { lista.innerHTML = '<p class="text-center text-red-500 font-bold">Error al cargar</p>'; return; }
-            if (!pendientes || pendientes.length === 0) {
-                lista.innerHTML = '<p class="text-center text-green-600 font-bold py-4">¡No hay ventas fiadas pendientes!</p>';
-                return;
+                lista.innerHTML = '';
+                pendientes.forEach(v => {
+                    const prod = productosCamioneta.find(p => p.id === v.producto_id);
+                    const cliente = clientesCache.find(c => c.id === v.cliente_id);
+                    const div = document.createElement('div');
+                    div.className = 'bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg shadow-sm mb-3';
+                    div.innerHTML = `
+                        <p class="font-black text-gray-800">${cliente ? (cliente.nombre1 + ' ' + (cliente.apellido1 || '')) : 'Cliente'} - ${prod ? prod.nombre : 'Producto'}</p>
+                        <p class="text-xl font-black text-red-700 my-2">$${v.total.toLocaleString('es-UY')} (x${v.cantidad_llenas})</p>
+                        <select id="pagoPend_${v.id}" class="block w-full px-3 py-2 border-2 border-green-300 rounded-lg text-sm font-bold mb-2 bg-green-50">
+                            <option value="efectivo">💵 Efectivo</option>
+                            <option value="transferencia">📱 Transferencia</option>
+                            <option value="tarjeta_debito">💳 Débito</option>
+                            <option value="tarjeta_credito">💳 Crédito (+$100)</option>
+                        </select>
+                        <button onclick="cobrarPendiente('${v.id}')" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold cursor-pointer btn-action">✅ Cobrar</button>
+                    `;
+                    lista.appendChild(div);
+                });
+            } catch (e) {
+                lista.innerHTML = '<p class="text-center text-red-500 font-bold">Error al cargar</p>';
             }
-
-            lista.innerHTML = '';
-            pendientes.forEach(v => {
-                const prod = productosCamioneta.find(p => p.id === v.producto_id);
-                const prodNombre = prod ? prod.nombre : 'Producto';
-                const cliente = clientesCache.find(c => c.id === v.cliente_id);
-                const clienteNombre = cliente ? (cliente.nombre1 + ' ' + (cliente.apellido1 || '')) : (v.tipo_venta || 'Cliente');
-                const fecha = new Date(v.created_at).toLocaleTimeString('es-UY', {hour: '2-digit', minute:'2-digit'});
-
-                const div = document.createElement('div');
-                div.className = 'bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg shadow-sm';
-                div.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <p class="font-black text-gray-800">${clienteNombre}</p>
-                        <p class="text-xs text-gray-500">${fecha}</p>
-                    </div>
-                    <p class="text-sm text-gray-700 mb-1">${prodNombre} x${v.cantidad_llenas}</p>
-                    <p class="text-xl font-black text-red-700 mb-3">$${v.total.toLocaleString('es-UY')}</p>
-                    <select id="pagoPend_${v.id}" class="block w-full px-3 py-2 border-2 border-green-300 rounded-lg text-sm font-bold mb-2 bg-green-50">
-                        <option value="efectivo">💵 Cobrar en Efectivo</option>
-                        <option value="transferencia">📱 Cobrar con Transferencia</option>
-                        <option value="tarjeta_debito">💳 Tarjeta Débito</option>
-                        <option value="tarjeta_credito">💳 Tarjeta Crédito (+$100 c/u)</option>
-                    </select>
-                    <button onclick="cobrarPendiente('${v.id}')" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold cursor-pointer">✅ Marcar como Cobrado</button>
-                `;
-                lista.appendChild(div);
-            });
         }
 
-        function cerrarPendientes() {
-            document.getElementById('moduloPendientes').style.display = 'none';
-        }
+        function cerrarPendientes() { document.getElementById('moduloPendientes').style.display = 'none'; }
 
         async function cobrarPendiente(ventaId) {
-            const metodoSelect = document.getElementById(`pagoPend_${ventaId}`);
-            const nuevoMetodo = metodoSelect.value;
+            try {
+                const metodoSelect = document.getElementById(`pagoPend_${ventaId}`);
+                const nuevoMetodo = metodoSelect.value;
+                let updateData = { estado: 'Cobrado', metodo_pago: nuevoMetodo };
 
-            let updateData = { estado: 'Cobrado', metodo_pago: nuevoMetodo };
-
-            if (nuevoMetodo === 'tarjeta_credito') {
-                const { data: venta } = await supabaseClient.from('ventas').select('total, cantidad_llenas').eq('id', ventaId).single();
-                if (venta) {
-                    const recargoAgregar = RECARGO_TARJETA_CREDITO * venta.cantidad_llenas;
-                    updateData.total = venta.total + recargoAgregar;
+                if (nuevoMetodo === 'tarjeta_credito') {
+                    const { data: venta } = await db.from('ventas').select('total, cantidad_llenas').eq('id', ventaId).single();
+                    if (venta) updateData.total = venta.total + (RECARGO_TARJETA_CREDITO * venta.cantidad_llenas);
                 }
+
+                const { error } = await db.from('ventas').update(updateData).eq('id', ventaId);
+                if (error) throw error;
+                
+                hablar("Cobro registrado");
+                mostrarPendientes();
+            } catch (e) {
+                alert('Error al cobrar: ' + e.message);
             }
-
-            const { error } = await supabaseClient
-                .from('ventas')
-                .update(updateData)
-                .eq('id', ventaId);
-
-            if (error) {
-                alert('Error al registrar el cobro: ' + error.message);
-                return;
-            }
-
-            hablar("Cobro registrado exitosamente");
-            mostrarPendientes();
         }
 
         // ==========================================
-        // MÓDULO CIERRE DE CAJA
+        // CAJA Y CIERRE
         // ==========================================
         async function mostrarPantallaCierre() {
             document.getElementById('moduloVentas').style.display = 'none';
             document.getElementById('moduloCierre').style.display = 'block';
 
-            const hoy = new Date().toISOString().split('T')[0];
-            const { data: ventas, error } = await supabaseClient.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy);
-            if (error) { console.error(error); return; }
+            try {
+                const hoy = new Date().toISOString().split('T')[0];
+                const { data: ventas, error } = await db.from('ventas').select('*').eq('repartidor_id', repartidorActual.id).gte('created_at', hoy);
+                if (error) throw error;
 
-            let totalEfectivo = 0;
-            let totalTransferencia = 0;
-            let totalCredito = 0;
-            let totalDebito = 0;
-            let totalLocal = 0;
-            let totalFiado = 0;
-            let totalGeneral = 0;
-            let totalUnidades = 0;
-            let totalCambio = 0;
-            
-            ventas.forEach(v => {
-                totalGeneral += v.total;
-                totalUnidades += v.cantidad_llenas;
-                totalCambio += v.cantidad_defectuosas;
+                let totalEfectivo = 0, totalTransferencia = 0, totalCredito = 0, totalDebito = 0, totalLocal = 0, totalFiado = 0, totalGeneral = 0, totalUnidades = 0, totalCambio = 0;
                 
-                if (v.estado === 'Pendiente' || v.metodo_pago === 'fiado') {
-                    totalFiado += v.total;
-                } else {
-                    if (v.metodo_pago === 'efectivo') totalEfectivo += v.total;
-                    else if (v.metodo_pago === 'transferencia') totalTransferencia += v.total;
-                    else if (v.metodo_pago === 'tarjeta_credito') totalCredito += v.total;
-                    else if (v.metodo_pago === 'tarjeta_debito') totalDebito += v.total;
-                    else if (v.metodo_pago === 'pago_local') totalLocal += v.total;
-                }
-            });
+                ventas.forEach(v => {
+                    totalGeneral += v.total;
+                    totalUnidades += v.cantidad_llenas;
+                    totalCambio += v.cantidad_defectuosas;
+                    if (v.estado === 'Pendiente' || v.metodo_pago === 'fiado') totalFiado += v.total;
+                    else {
+                        if (v.metodo_pago === 'efectivo') totalEfectivo += v.total;
+                        else if (v.metodo_pago === 'transferencia') totalTransferencia += v.total;
+                        else if (v.metodo_pago === 'tarjeta_credito') totalCredito += v.total;
+                        else if (v.metodo_pago === 'tarjeta_debito') totalDebito += v.total;
+                        else if (v.metodo_pago === 'pago_local') totalLocal += v.total;
+                    }
+                });
 
-            const vuelto = parseFloat(localStorage.getItem('vuelto_inicio')) || 0;
-            const entregadoParcial = parseFloat(localStorage.getItem('entregado_parcial')) || 0;
-            const aEntregar = totalEfectivo + vuelto - entregadoParcial;
+                const vuelto = parseFloat(localStorage.getItem('vuelto_inicio')) || 0;
+                const entregadoParcial = parseFloat(localStorage.getItem('entregado_parcial')) || 0;
+                const aEntregar = totalEfectivo + vuelto - entregadoParcial;
 
-            document.getElementById('informeProductos').innerHTML = `<div class="flex justify-between"><span>Llenas entregadas:</span> <span>${totalUnidades}</span></div>`;
-            document.getElementById('informeEfectivo').textContent = "$" + totalEfectivo.toLocaleString('es-UY');
-            document.getElementById('informeTransferencia').textContent = "$" + totalTransferencia.toLocaleString('es-UY');
-            document.getElementById('informeCredito').textContent = "$" + totalCredito.toLocaleString('es-UY');
-            document.getElementById('informeDebito').textContent = "$" + totalDebito.toLocaleString('es-UY');
-            document.getElementById('informeLocal').textContent = "$" + totalLocal.toLocaleString('es-UY');
-            document.getElementById('informeFiado').textContent = "$" + totalFiado.toLocaleString('es-UY');
-            document.getElementById('informeCambio').textContent = totalCambio;
-            document.getElementById('informeTotalGeneral').textContent = "$" + totalGeneral.toLocaleString('es-UY');
-            document.getElementById('informeVuelto').textContent = "$" + vuelto.toLocaleString('es-UY');
-            document.getElementById('informeEntregadoParcial').textContent = "$" + entregadoParcial.toLocaleString('es-UY');
-            document.getElementById('informeTotalEntregar').textContent = "$" + Math.max(0, aEntregar).toLocaleString('es-UY');
+                document.getElementById('informeProductos').innerHTML = `<div class="flex justify-between"><span>Llenas entregadas:</span> <span>${totalUnidades}</span></div>`;
+                document.getElementById('informeEfectivo').textContent = "$" + totalEfectivo.toLocaleString('es-UY');
+                document.getElementById('informeTransferencia').textContent = "$" + totalTransferencia.toLocaleString('es-UY');
+                document.getElementById('informeCredito').textContent = "$" + totalCredito.toLocaleString('es-UY');
+                document.getElementById('informeDebito').textContent = "$" + totalDebito.toLocaleString('es-UY');
+                document.getElementById('informeLocal').textContent = "$" + totalLocal.toLocaleString('es-UY');
+                document.getElementById('informeFiado').textContent = "$" + totalFiado.toLocaleString('es-UY');
+                document.getElementById('informeCambio').textContent = totalCambio;
+                document.getElementById('informeTotalGeneral').textContent = "$" + totalGeneral.toLocaleString('es-UY');
+                document.getElementById('informeVuelto').textContent = "$" + vuelto.toLocaleString('es-UY');
+                document.getElementById('informeEntregadoParcial').textContent = "$" + entregadoParcial.toLocaleString('es-UY');
+                document.getElementById('informeTotalEntregar').textContent = "$" + Math.max(0, aEntregar).toLocaleString('es-UY');
+            } catch (e) {
+                alert("Error al cargar caja: " + e.message);
+            }
         }
 
         function realizarCierreParcial() {
             const aEntregarActual = parseFloat(document.getElementById('informeTotalEntregar').textContent.replace('$', '').replace('.', '')) || 0;
             const monto = prompt(`¿Cuánto efectivo vas a entregar ahora?\n(Disponible: $${aEntregarActual.toLocaleString('es-UY')})`);
-            
             if (monto && !isNaN(parseFloat(monto)) && parseFloat(monto) > 0) {
-                const entregadoPrevio = parseFloat(localStorage.getItem('entregado_parcial')) || 0;
-                const nuevoEntregado = entregadoPrevio + parseFloat(monto);
+                const nuevoEntregado = (parseFloat(localStorage.getItem('entregado_parcial')) || 0) + parseFloat(monto);
                 localStorage.setItem('entregado_parcial', nuevoEntregado.toString());
                 hablar("Entrega parcial registrada");
                 mostrarPantallaCierre();
@@ -791,15 +734,12 @@
 
         function cerrarJornada() {
             if (!confirm('¿Estás seguro de CERRAR LA JORNADA? Esta acción no se puede deshacer.')) return;
-
             localStorage.removeItem('jornada_activa');
             localStorage.removeItem('km_inicio');
             localStorage.removeItem('vuelto_inicio');
             localStorage.removeItem('entregado_parcial');
-
-            detenerSeguimientoGPS(); // DETENEMOS EL GPS AL CERRAR
+            detenerSeguimientoGPS();
             hablar("Jornada finalizada. Hasta mañana!");
-            
             document.getElementById('moduloCierre').style.display = 'none';
             document.getElementById('pantallaTrabajo').style.display = 'none';
             document.getElementById('pantallaInicioJornada').style.display = 'flex';
@@ -814,56 +754,63 @@
         }
 
         // ==========================================
-        // MÓDULO GPS INTEGRADO CON LA WEB
+        // GPS - RASTREO Y PARADAS
         // ==========================================
         function iniciarSeguimientoGPS() {
             if (!navigator.geolocation) {
                 console.log("GPS no soportado en este navegador");
                 return;
             }
-            
-            // Evitar duplicados
-            if (gpsWatchId !== null) return;
+            if (gpsWatchId !== null) return; // Evitar duplicados
 
             lastMovementTime = Date.now();
             alreadyAskedForThisStop = false;
 
-            // Verificar paradas cada 15 segundos
-            stopCheckInterval = setInterval(verificarParadaGPS, 15000);
+            // Verificar paradas cada 20 segundos
+            if (!stopCheckInterval) {
+                stopCheckInterval = setInterval(verificarParadaGPS, 20000);
+            }
 
             gpsWatchId = navigator.geolocation.watchPosition(
                 async (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
-                    const speed = position.coords.speed; // metros por segundo
-                    const accuracy = position.coords.accuracy;
+                    const speed = position.coords.speed || 0;
 
                     if (!lastGpsPosition) lastGpsPosition = {};
                     lastGpsPosition.lat = lat;
                     lastGpsPosition.lng = lng;
 
-                    // Enviar ubicación a Supabase cada 15 segundos para el mapa web
+                    // Enviar ubicación a Supabase cada 15 segundos
                     const now = Date.now();
                     if (!lastGpsPosition.lastSent || (now - lastGpsPosition.lastSent) > 15000) {
-                        await supabaseClient.from('ubicaciones').insert({
-                            repartidor_id: repartidorActual.id,
-                            latitud: lat,
-                            longitud: lng,
-                            velocidad: speed || 0,
-                            en_movimiento: speed > 0.5,
-                            precision_gps: accuracy,
-                            timestamp: new Date().toISOString()
-                        });
-                        lastGpsPosition.lastSent = now;
+                        try {
+                            await db.from('ubicaciones').insert({
+                                repartidor_id: repartidorActual.id,
+                                latitud: lat,
+                                longitud: lng,
+                                velocidad: speed,
+                                en_movimiento: speed > 0.5,
+                                precision_gps: position.coords.accuracy,
+                                timestamp: new Date().toISOString()
+                            });
+                            lastGpsPosition.lastSent = now;
+                        } catch (e) {
+                            console.error("Error guardando ubicación GPS:", e);
+                        }
                     }
 
-                    // Rastrear movimiento para detectar detenciones
-                    if (speed > 0.5) { // Si se mueve a más de 1.8 km/h (0.5 m/s)
+                    if (speed > 0.5) { 
                         lastMovementTime = Date.now();
                         alreadyAskedForThisStop = false;
                     }
                 },
-                (error) => console.error("Error GPS:", error),
+                (error) => {
+                    console.error("Error GPS:", error.message);
+                    if (error.code === 1) {
+                        alert("Debes permitir el acceso a tu ubicación para el rastreo.");
+                    }
+                },
                 { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
             );
         }
@@ -872,11 +819,10 @@
             if (!lastGpsPosition || !lastGpsPosition.lat) return;
 
             const timeStopped = Date.now() - lastMovementTime;
-            const twoMinutes = 120000; // 2 minutos en milisegundos
+            const twoMinutes = 120000; 
 
             if (timeStopped >= twoMinutes && !alreadyAskedForThisStop) {
-                alreadyAskedForThisStop = true; // Marcamos para no preguntar cada 15s
-                
+                alreadyAskedForThisStop = true; 
                 if (confirm("🛑 Llevas detenido un rato. ¿Realizaste una venta en este lugar?")) {
                     registrarParadaVentaGPS(lastGpsPosition.lat, lastGpsPosition.lng);
                 }
@@ -884,17 +830,16 @@
         }
 
         async function registrarParadaVentaGPS(lat, lng) {
-            // Guardamos en puntos_ruta para que la Web lo detecte automáticamente en el Historial
-            const { error } = await supabaseClient.from('puntos_ruta').insert({
-                nombre: "🛒 Venta en Ruta (App)",
-                latitud: lat,
-                longitud: lng
-            });
-
-            if (!error) {
+            try {
+                await db.from('puntos_ruta').insert({
+                    nombre: "🛒 Venta en Ruta (App)",
+                    latitud: lat,
+                    longitud: lng
+                });
                 hablar("Parada de venta registrada en el mapa");
-            } else {
-                console.error("Error guardando parada:", error);
+            } catch (e) {
+                console.error("Error guardando parada:", e);
+                alert("Error al guardar la parada en el mapa: " + e.message);
             }
         }
 
