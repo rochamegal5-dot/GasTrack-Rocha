@@ -12,6 +12,8 @@ import com.google.android.gms.location.*
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.*
 import java.time.Instant
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 class LocationTrackingService : Service() {
 
@@ -32,6 +34,7 @@ class LocationTrackingService : Service() {
     private lateinit var wakeLock: PowerManager.WakeLock
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var lastUploadedLocation: Location? = null
+    private val httpClient = OkHttpClient()
 
     override fun onCreate() {
         super.onCreate()
@@ -73,7 +76,7 @@ class LocationTrackingService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
 
-        val locationRequest = LocationRequest.Builder(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, 5000)
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
             .setMinUpdateIntervalMillis(3000)
             .setWaitForAccurateLocation(true)
             .build()
@@ -90,9 +93,9 @@ class LocationTrackingService : Service() {
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
-        private fun uploadLocation(location: Location) {
-        // FILTRO DE PRECISIÓN: Si la precisión del GPS es peor a 30 metros, ignoramos el dato
-        // para evitar saltos o ubicaciones erróneas en el mapa.
+
+    private fun uploadLocation(location: Location) {
+        // FILTRO DE PRECISIÓN: Si la precisión del GPS es peor a 30 metros, ignoramos
         if (location.accuracy > 30f) {
             return
         }
@@ -111,22 +114,56 @@ class LocationTrackingService : Service() {
                     bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY)
                 } catch (_: Exception) { 100 }
 
-                val data = UbicacionInsert(
-                    repartidor_id = repartidorId,
-                    latitud = location.latitude,
-                    longitud = location.longitude,
-                    velocidad = speed,
-                    bateria = bateria,
-                    precision_gps = location.accuracy.toDouble(),
-                    en_movimiento = speed > 1.0,
-                    timestamp = Instant.now().toString()
-                )
+                // ===== 1. SUBIDA A TURSO (NUEVO - PARA MEGAL ERP) =====
+                try {
+                    // Convertir repartidorId a device_id numérico para Turso
+                    // Si tu repartidorId es UUID de Supabase, mapealo acá:
+                    val deviceId = when {
+                        repartidorId.toIntOrNull() != null -> repartidorId.toInt() // si ya es número (7, 8)
+                        repartidorId.contains("antonio", ignoreCase = true) -> 7
+                        repartidorId.contains("jose", ignoreCase = true) -> 8
+                        // Agregá más mapeos según tus repartidores:
+                        // Si es UUID, buscá en tu tabla repartidores el device_id correspondiente
+                        else -> {
+                            // Por defecto intenta sacar el device_id de SharedPreferences o usa 7
+                            // Si no lo encontrás, usa 7 para Antonio, 8 para Jose
+                            // Podés guardarlo en SharedPreferences cuando el repartidor hace login
+                            try {
+                                val prefs = getSharedPreferences("gastrack", MODE_PRIVATE)
+                                prefs.getInt("device_id", 7)
+                            } catch (_: Exception) { 7 }
+                        }
+                    }
 
-                SupabaseClient.client.postgrest["ubicaciones"].insert(data)
+                    val tursoUrl = "https://megalweb.vercel.app/api/gps?device_id=$deviceId&lat=${location.latitude}&lng=${location.longitude}&velocidad=$speed"
+                    val request = Request.Builder().url(tursoUrl).build()
+                    httpClient.newCall(request).execute().use { response ->
+                        println("Turso upload: ${response.code} - $tursoUrl")
+                    }
+                } catch (e: Exception) {
+                    println("Error subiendo a Turso: ${e.message}")
+                }
+
+                // ===== 2. SUBIDA A SUPABASE (ORIGINAL - MANTENER PARA BACKUP) =====
+                try {
+                    val data = UbicacionInsert(
+                        repartidor_id = repartidorId,
+                        latitud = location.latitude,
+                        longitud = location.longitude,
+                        velocidad = speed,
+                        bateria = bateria,
+                        precision_gps = location.accuracy.toDouble(),
+                        en_movimiento = speed > 1.0,
+                        timestamp = Instant.now().toString()
+                    )
+                    SupabaseClient.client.postgrest["ubicaciones"].insert(data)
+                } catch (e: Exception) {
+                    println("Error Supabase: ${e.message}")
+                }
+
                 lastUploadedLocation = location
-
                 val speedKmh = (speed * 3.6).toInt()
-                updateNotification("En vivo - ${speedKmh} km/h")
+                updateNotification("En vivo - ${speedKmh} km/h - Turso OK")
 
             } catch (e: Exception) {
                 println("Error subiendo ubicación: ${e.message}")
@@ -171,8 +208,8 @@ class LocationTrackingService : Service() {
             putExtra(EXTRA_REPARTIDOR_ID, repartidorId)
         }
         val pending = PendingIntent.getService(this, 1, restartIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val alarmManager = getSystemService(ALARM_SERVICE) as android.app.AlarmManager
-        alarmManager.set(android.app.AlarmManager.ELAPSED_REALTIME_WAKEUP, android.os.SystemClock.elapsedRealtime() + 1000, pending)
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, android.os.SystemClock.elapsedRealtime() + 1000, pending)
         super.onTaskRemoved(rootIntent)
     }
 
@@ -182,3 +219,16 @@ class LocationTrackingService : Service() {
         super.onDestroy()
     }
 }
+
+// Asegurate que UbicacionInsert esté definido en tu proyecto
+data class UbicacionInsert(
+    val repartidor_id: String,
+    val latitud: Double,
+    val longitud: Double,
+    val velocidad: Double,
+    val bateria: Int,
+    val precision_gps: Double,
+    val en_movimiento: Boolean,
+    val timestamp: String
+)
+
