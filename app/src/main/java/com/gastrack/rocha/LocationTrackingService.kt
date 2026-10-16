@@ -9,9 +9,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
-import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.*
-import java.time.Instant
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -23,12 +21,11 @@ class LocationTrackingService : Service() {
         const val ACTION_START = "com.gastrack.rocha.START_TRACKING"
         const val ACTION_STOP = "com.gastrack.rocha.STOP_TRACKING"
         const val EXTRA_REPARTIDOR_ID = "repartidor_id"
-
         var isRunning = false
             private set
     }
 
-    private var repartidorId: String = ""
+    private var repartidorId: String = "7"
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
     private lateinit var wakeLock: PowerManager.WakeLock
@@ -39,15 +36,11 @@ class LocationTrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "GasTrack::LocationWakeLock")
-
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let { location ->
-                    uploadLocation(location)
-                }
+                result.lastLocation?.let { uploadLocation(it) }
             }
         }
     }
@@ -55,7 +48,7 @@ class LocationTrackingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
-                repartidorId = intent.getStringExtra(EXTRA_REPARTIDOR_ID) ?: ""
+                repartidorId = intent.getStringExtra(EXTRA_REPARTIDOR_ID) ?: "7"
                 startTracking()
             }
             ACTION_STOP -> stopTracking()
@@ -68,19 +61,16 @@ class LocationTrackingService : Service() {
     private fun startTracking() {
         isRunning = true
         if (!wakeLock.isHeld) wakeLock.acquire(12 * 60 * 60 * 1000L)
-
-        val notification = createNotification("Seguimiento activo")
+        val notification = createNotification("Seguimiento activo - Device $repartidorId")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
-
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
             .setMinUpdateIntervalMillis(3000)
             .setWaitForAccurateLocation(true)
             .build()
-
         try {
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, mainLooper)
         } catch (e: SecurityException) { stopTracking() }
@@ -95,11 +85,7 @@ class LocationTrackingService : Service() {
     }
 
     private fun uploadLocation(location: Location) {
-        // FILTRO DE PRECISIÓN: Si la precisión del GPS es peor a 30 metros, ignoramos
-        if (location.accuracy > 30f) {
-            return
-        }
-
+        if (location.accuracy > 30f) return
         serviceScope.launch {
             try {
                 val speed = if (location.hasSpeed() && location.speed > 0) location.speed.toDouble()
@@ -109,64 +95,19 @@ class LocationTrackingService : Service() {
                     if (timeDiff > 0) distance / timeDiff else 0.0
                 } else 0.0
 
-                val bateria = try {
-                    val bm = getSystemService(BATTERY_SERVICE) as android.os.BatteryManager
-                    bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY)
-                } catch (_: Exception) { 100 }
-
-                // ===== 1. SUBIDA A TURSO (NUEVO - PARA MEGAL ERP) =====
-                try {
-                    // Convertir repartidorId a device_id numérico para Turso
-                    // Si tu repartidorId es UUID de Supabase, mapealo acá:
-                    val deviceId = when {
-                        repartidorId.toIntOrNull() != null -> repartidorId.toInt() // si ya es número (7, 8)
-                        repartidorId.contains("antonio", ignoreCase = true) -> 7
-                        repartidorId.contains("jose", ignoreCase = true) -> 8
-                        // Agregá más mapeos según tus repartidores:
-                        // Si es UUID, buscá en tu tabla repartidores el device_id correspondiente
-                        else -> {
-                            // Por defecto intenta sacar el device_id de SharedPreferences o usa 7
-                            // Si no lo encontrás, usa 7 para Antonio, 8 para Jose
-                            // Podés guardarlo en SharedPreferences cuando el repartidor hace login
-                            try {
-                                val prefs = getSharedPreferences("gastrack", MODE_PRIVATE)
-                                prefs.getInt("device_id", 7)
-                            } catch (_: Exception) { 7 }
-                        }
-                    }
-
-                    val tursoUrl = "https://megalweb.vercel.app/api/gps?device_id=$deviceId&lat=${location.latitude}&lng=${location.longitude}&velocidad=$speed"
-                    val request = Request.Builder().url(tursoUrl).build()
-                    httpClient.newCall(request).execute().use { response ->
-                        println("Turso upload: ${response.code} - $tursoUrl")
-                    }
-                } catch (e: Exception) {
-                    println("Error subiendo a Turso: ${e.message}")
-                }
-
-                // ===== 2. SUBIDA A SUPABASE (ORIGINAL - MANTENER PARA BACKUP) =====
-                try {
-                    val data = UbicacionInsert(
-                        repartidor_id = repartidorId,
-                        latitud = location.latitude,
-                        longitud = location.longitude,
-                        velocidad = speed,
-                        bateria = bateria,
-                        precision_gps = location.accuracy.toDouble(),
-                        en_movimiento = speed > 1.0,
-                        timestamp = Instant.now().toString()
-                    )
-                    SupabaseClient.client.postgrest["ubicaciones"].insert(data)
-                } catch (e: Exception) {
-                    println("Error Supabase: ${e.message}")
+                val deviceId = repartidorId.toIntOrNull() ?: 7
+                val tursoUrl = "https://megalweb.vercel.app/api/gps?device_id=$deviceId&lat=${location.latitude}&lng=${location.longitude}&velocidad=$speed"
+                val request = Request.Builder().url(tursoUrl).build()
+                httpClient.newCall(request).execute().use { response ->
+                    println("Turso OK: ${response.code}")
                 }
 
                 lastUploadedLocation = location
                 val speedKmh = (speed * 3.6).toInt()
-                updateNotification("En vivo - ${speedKmh} km/h - Turso OK")
+                updateNotification("En vivo - ${speedKmh} km/h - Device $deviceId")
 
             } catch (e: Exception) {
-                println("Error subiendo ubicación: ${e.message}")
+                println("Error: ${e.message}")
             }
         }
     }
@@ -175,7 +116,6 @@ class LocationTrackingService : Service() {
         createNotificationChannel()
         val stopIntent = Intent(this, LocationTrackingService::class.java).apply { action = ACTION_STOP }
         val stopPending = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("GasTrack Rocha")
             .setContentText(text)
@@ -219,7 +159,4 @@ class LocationTrackingService : Service() {
         super.onDestroy()
     }
 }
-
-
-)
 
