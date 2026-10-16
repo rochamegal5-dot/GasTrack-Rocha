@@ -220,15 +220,6 @@ class LocationTrackingService : Service() {
     }
 }
 
-// Asegurate que UbicacionInsert esté definido en tu proyecto
-data class UbicacionInsert(
-    val repartidor_id: String,
-    val latitud: Double,
-    val longitud: Double,
-    val velocidad: Double,
-    val bateria: Int,
-    val precision_gps: Double,
-    val en_movimiento: Boolean,
-    val timestamp: String
+
 )
 
