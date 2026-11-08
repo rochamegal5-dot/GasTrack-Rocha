@@ -1,6 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
@@ -11,8 +13,9 @@ android {
         applicationId = "com.gastrack.rocha"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "2.0-turso"
+        versionCode = 3
+        // CORREGIDO: era "2.0-turso"
+        versionName = "2.0-postgres"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,7 +43,8 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.4"
+        // CORREGIDO: era 1.5.4, con el BOM 2024.02.00 va 1.5.14
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -58,13 +62,16 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    
+
     // Location
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-    
-    // HTTP para Turso
+    implementation("com.google.android.gms:play-services-location:21.1.0")
+
+    // HTTP para Postgres - CORREGIDO: era "para Turso"
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    
+
+    // Serialization - CORREGIDO: esto faltaba, lo usa UbicacionInsert
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
