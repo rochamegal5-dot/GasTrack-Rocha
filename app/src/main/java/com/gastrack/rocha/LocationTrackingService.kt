@@ -45,6 +45,7 @@ class LocationTrackingService : Service() {
     companion object {
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
+        const val EXTRA_REPARTIDOR_ID = "extra_repartidor_id"
         const val CHANNEL_ID = "gastrack_gps_channel"
         const val NOTIFICATION_ID = 1
         private const val TAG = "GasTrackService"
@@ -85,10 +86,12 @@ class LocationTrackingService : Service() {
         when (intent?.action) {
             ACTION_START -> {
                 // Viene de MainActivity como String
-                val idDelIntent = intent.getStringExtra("repartidor_id")
-                if (!idDelIntent.isNullOrEmpty()) {
-                    repartidorId = idDelIntent
-                } else {
+                // DESPUÉS - BIEN
+val id = intent?.getStringExtra(EXTRA_REPARTIDOR_ID)
+if (!id.isNullOrEmpty()) {
+    repartidorId = id
+                
+               } else {
                     // Si no vino, lo recupero de lo guardado (para BootReceiver)
                     val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
                     repartidorId = prefs.getString("repartidor_id", "7") ?: "7"
@@ -172,7 +175,7 @@ class LocationTrackingService : Service() {
             speed = velocidadKmh,
             bateria = bateria,
             battery = bateria,
-            precision_gps = location.accuracy.toDouble(),
+            precision_gps = location.accuracy,
             fecha_local = fechaLocal,
             hoy = fechaLocal,
             timestamp = fechaLocal
