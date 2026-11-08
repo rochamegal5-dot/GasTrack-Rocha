@@ -1,6 +1,7 @@
 package com.gastrack.rocha
 
 import android.app.*
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.location.Location
@@ -134,4 +135,69 @@ private fun stopTracking() {
                     put("hoy", fechaLocal)
                 }
 
-                val body = json
+                                val body = json.toString().toRequestBody("application/json".toMediaType())
+                val request = Request.Builder()
+                    .url("https://megalweb.vercel.app/api/postgres?table=gps_locations")
+                    .post(body)
+                    .build()
+
+                httpClient.newCall(request).execute().use { response ->
+                    println("Postgres OK: ${response.code}")
+                }
+
+                lastUploadedLocation = location
+                updateNotification("En vivo - ${speedKmh.toInt()} km/h - Device $repartidorId")
+
+            } catch (e: Exception) {
+                println("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun createNotification(text: String): Notification {
+        createNotificationChannel()
+        val stopIntent = Intent(this, LocationTrackingService::class.java).apply { action = ACTION_STOP }
+        val stopPending = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("GasTrack Rocha")
+            .setContentText(text)
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setOngoing(true)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Detener", stopPending)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+    }
+
+    private fun updateNotification(text: String) {
+        try {
+            val notification = createNotification(text)
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            manager.notify(NOTIFICATION_ID, notification)
+        } catch (_: Exception) {}
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(CHANNEL_ID, "Seguimiento GPS", NotificationManager.IMPORTANCE_LOW)
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val restartIntent = Intent(this, LocationTrackingService::class.java).apply {
+            action = ACTION_START
+            putExtra(EXTRA_REPARTIDOR_ID, repartidorId)
+        }
+        val pending = PendingIntent.getService(this, 1, restartIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, android.os.SystemClock.elapsedRealtime() + 1000, pending)
+        super.onTaskRemoved(rootIntent)
+    }
+
+    override fun onDestroy() {
+        stopTracking()
+        serviceScope.cancel()
+        super.onDestroy()
+    }
+}
