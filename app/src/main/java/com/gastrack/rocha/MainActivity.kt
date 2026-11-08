@@ -1,159 +1,255 @@
 package com.gastrack.rocha
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
 
-    private val requestPermissionLauncher = registerForActivityResult(
+    // IDs reales en Postgres (tabla repartidores) - SON TEXTO, no número
+    // Antonio = "7" | Jose = "8"
+    private var repartidorSeleccionado by mutableStateOf("7")
+    private var estaRastreando by mutableStateOf(false)
+
+    private val permisosLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions.values.all { it }
-        if (granted) {
-            Toast.makeText(this, "Permisos concedidos", Toast.LENGTH_SHORT).show()
+    ) { resultados ->
+        // Si dio los permisos, no hacemos nada solo. El usuario aprieta Iniciar.
+        val todoOk = resultados.values.all { it }
+        if (!todoOk) {
+            // Si falta alguno, igual dejamos usar la UI, el servicio va a pedirlo de nuevo
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        checkPermissions()
+
+        // Recuperar estado guardado
+        val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
+        repartidorSeleccionado = prefs.getString("repartidor_id", "7") ?: "7"
+        estaRastreando = prefs.getBoolean("was_running", false)
+
+        pedirPermisos()
+
         setContent {
             MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    GasTrackScreen()
-                }
+                GasTrackScreen(
+                    repartidorSeleccionado = repartidorSeleccionado,
+                    estaRastreando = estaRastreando,
+                    onSeleccionarRepartidor = { id ->
+                        repartidorSeleccionado = id
+                        prefs.edit().putString("repartidor_id", id).apply()
+                    },
+                    onIniciar = { startTracking(repartidorSeleccionado) },
+                    onDetener = { stopTracking() }
+                )
             }
         }
     }
 
-    private fun checkPermissions() {
-        val permissions = arrayOf(
+    override fun onResume() {
+        super.onResume()
+        val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
+        estaRastreando = prefs.getBoolean("was_running", false)
+    }
+
+    private fun pedirPermisos() {
+        val permisos = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
             Manifest.permission.FOREGROUND_SERVICE,
             Manifest.permission.FOREGROUND_SERVICE_LOCATION,
-            Manifest.permission.WAKE_LOCK
+            Manifest.permission.WAKE_LOCK,
+            Manifest.permission.RECEIVE_BOOT_COMPLETED
         )
-        val toRequest = permissions.filter {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permisos.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        val faltantes = permisos.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (toRequest.isNotEmpty()) {
-            requestPermissionLauncher.launch(toRequest.toTypedArray())
+        if (faltantes.isNotEmpty()) {
+            permisosLauncher.launch(faltantes.toTypedArray())
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun GasTrackScreen() {
-        // CORREGIDO: antes eran "7" y "8" de Turso.
-        // Ahora tienen que ser los ID reales de la tabla repartidores en Postgres.
-        // Para saberlos: en la web abri consola y pone:
-        // fetch('/api/postgres?table=repartidores').then(r=>r.json()).then(console.log)
-        // Y copia el "id" de Antonio y de Jose y pegalo aca abajo.
-        // Si todavia no los tenes, deja "7" y "8" por ahora, la web igual los va a mostrar,
-        // pero sin el nombre. Lo ideal es cambiarlos.
-        var selectedDevice by remember { mutableStateOf("7") }
-        var isTracking by remember { mutableStateOf(LocationTrackingService.isRunning) }
+    private fun startTracking(repartidorId: String) {
+        // Guardar para BootReceiver y para que no se pierda al reiniciar
+        val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString("repartidor_id", repartidorId)
+            .putBoolean("was_running", true)
+            .apply()
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "🔥 GasTrack Rocha", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-            // CORREGIDO: era "Turso megal-erp - Rocha"
-            Text(text = "Postgres - Rocha", style = MaterialTheme.typography.bodySmall)
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(text = "Seleccioná repartidor:")
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = selectedDevice == "7",
-                    onClick = { selectedDevice = "7" },
-                    label = { Text("Antonio (7)") }
-                )
-                FilterChip(
-                    selected = selectedDevice == "8",
-                    onClick = { selectedDevice = "8" },
-                    label = { Text("Jose (8)") }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    if (isTracking) {
-                        stopTracking()
-                        isTracking = false
-                    } else {
-                        startTracking(selectedDevice)
-                        isTracking = true
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (isTracking) "🛑 Detener Seguimiento" else "📍 Iniciar Seguimiento - Device $selectedDevice")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                // CORREGIDO: era /api/gps?device_id=
-                // Ahora es /api/postgres?table=gps_locations
-                text = if (isTracking) "✅ Enviando GPS a https://megalweb.vercel.app/api/postgres?table=gps_locations - Repartidor $selectedDevice"
-                       else "⏸ Detenido",
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Instrucciones:", style = MaterialTheme.typography.titleSmall)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("1. Seleccioná 7 para Antonio o 8 para Jose", style = MaterialTheme.typography.bodySmall)
-                    Text("2. Dale Iniciar Seguimiento", style = MaterialTheme.typography.bodySmall)
-                    Text("3. Dejá la app en segundo plano", style = MaterialTheme.typography.bodySmall)
-                    Text("4. Verificá en megalweb.vercel.app", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-    }
-
-    private fun startTracking(deviceId: String) {
         val intent = Intent(this, LocationTrackingService::class.java).apply {
             action = LocationTrackingService.ACTION_START
-            putExtra(LocationTrackingService.EXTRA_REPARTIDOR_ID, deviceId)
+            putExtra("repartidor_id", repartidorId) // String "7" o "8"
         }
-        startForegroundService(intent)
-        Toast.makeText(this, "Seguimiento iniciado Device $deviceId", Toast.LENGTH_SHORT).show()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        estaRastreando = true
     }
 
     private fun stopTracking() {
+        val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("was_running", false).apply()
+
         val intent = Intent(this, LocationTrackingService::class.java).apply {
             action = LocationTrackingService.ACTION_STOP
         }
         startService(intent)
-        Toast.makeText(this, "Seguimiento detenido", Toast.LENGTH_SHORT).show()
+        estaRastreando = false
+    }
+}
+
+@Composable
+fun GasTrackScreen(
+    repartidorSeleccionado: String,
+    estaRastreando: Boolean,
+    onSeleccionarRepartidor: (String) -> Unit,
+    onIniciar: () -> Unit,
+    onDetener: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "🔥 GasTrack Rocha",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Black,
+            color = Color(0xFF0EA5E9)
+        )
+        Text(
+            text = "GPS en vivo - Megal ERP",
+            fontSize = 14.sp,
+            color = Color.Gray
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Estado
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = if (estaRastreando) Color(0xFFDCFCE7) else Color(0xFFFEF3C7)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (estaRastreando) "🟢 EN VIVO" else "🟡 DETENIDO",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = if (repartidorSeleccionado == "7") "Antonio" else "Jose",
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "¿Quién está repartiendo?",
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Chips repartidores - IDs TEXT de Postgres
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterChip(
+                selected = repartidorSeleccionado == "7",
+                onClick = { onSeleccionarRepartidor("7") },
+                label = { Text("Antonio (7)") },
+                modifier = Modifier.weight(1f),
+                enabled = !estaRastreando
+            )
+            FilterChip(
+                selected = repartidorSeleccionado == "8",
+                onClick = { onSeleccionarRepartidor("8") },
+                label = { Text("Jose (8)") },
+                modifier = Modifier.weight(1f),
+                enabled = !estaRastreando
+            )
+        }
+
+        Text(
+            text = if (estaRastreando) "Para cambiar de repartidor, primero detené el seguimiento."
+            else "Elegí quién sos antes de iniciar.",
+            fontSize = 12.sp,
+            color = Color.Gray,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Botones
+        Button(
+            onClick = onIniciar,
+            enabled = !estaRastreando,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A))
+        ) {
+            Text("▶ INICIAR SEGUIMIENTO", fontWeight = FontWeight.Black, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = onDetener,
+            enabled = estaRastreando,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+        ) {
+            Text("⏹ DETENER SEGUIMIENTO", fontWeight = FontWeight.Black, fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Manda cada 5 seg a:\nmegalweb.vercel.app / gps_locations",
+            fontSize = 11.sp,
+            color = Color.Gray
+        )
     }
 }
