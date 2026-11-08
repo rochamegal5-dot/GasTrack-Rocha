@@ -14,12 +14,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.5'
       - name: Build APK
         run: gradle assembleDebug --stacktrace
       - name: Upload APK
