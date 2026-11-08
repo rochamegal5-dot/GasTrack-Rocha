@@ -1,44 +1,60 @@
 package com.gastrack.rocha
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Serializable
 data class UbicacionInsert(
-    @SerialName("repartidor_id")
+    // ID en Postgres es TEXT: "7" Antonio, "8" Jose
     val repartidor_id: String,
-
-    // La web acepta lat/lng y tambien latitude/longitude, mandamos los 2 nombres
-    @SerialName("lat")
     val lat: Double,
-    @SerialName("lng")
     val lng: Double,
-    @SerialName("latitude")
+    // Duplicados para que la web los lea como lat/lng o latitude/longitude
     val latitude: Double = lat,
-    @SerialName("longitude")
     val longitude: Double = lng,
-
-    @SerialName("velocidad")
-    val velocidad: Double, // en km/h
-    @SerialName("speed")
+    val velocidad: Double,
     val speed: Double = velocidad,
-
-    @SerialName("bateria")
     val bateria: Int,
-    @SerialName("battery")
     val battery: Int = bateria,
-
-    @SerialName("precision_gps")
-    val precision_gps: Double = 0.0,
-
-    @SerialName("en_movimiento")
+    val precision_gps: Float = 0f,
     val en_movimiento: Boolean = velocidad > 3,
-
-    @SerialName("fecha_local")
-    val fecha_local: String, // yyyy-MM-dd en America/Montevideo
-    @SerialName("hoy")
+    val fecha_local: String = hoyUY(),
     val hoy: String = fecha_local,
-
-    @SerialName("timestamp")
     val timestamp: String = fecha_local
-)
+) {
+    companion object {
+        fun hoyUY(): String {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale("es", "UY"))
+            sdf.timeZone = TimeZone.getTimeZone("America/Montevideo")
+            return sdf.format(Date())
+        }
+
+        fun crear(
+            repartidorId: String,
+            lat: Double,
+            lng: Double,
+            velocidadKmh: Double,
+            bateria: Int,
+            precision: Float
+        ): UbicacionInsert {
+            val fecha = hoyUY()
+            return UbicacionInsert(
+                repartidor_id = repartidorId,
+                lat = lat,
+                lng = lng,
+                latitude = lat,
+                longitude = lng,
+                velocidad = velocidadKmh,
+                speed = velocidadKmh,
+                bateria = bateria,
+                battery = bateria,
+                precision_gps = precision,
+                en_movimiento = velocidadKmh > 3,
+                fecha_local = fecha,
+                hoy = fecha,
+                timestamp = fecha
+            )
+        }
+    }
+}
