@@ -64,8 +64,15 @@ class LocationTrackingService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun startTracking() {
-        isRunning = true
-        if (!wakeLock.isHeld) wakeLock.acquire(12 * 60 * 60 * 1000L)
+    // GUARDAR PARA QUE BOOTRECEIVER PUEDA REINICIAR SOLO
+    getSharedPreferences("gastrack", Context.MODE_PRIVATE).edit()
+        .putString("repartidor_id", repartidorId)
+        .putBoolean("was_running", true)
+        .apply()
+
+    isRunning = true
+    // ... resto de tu startTracking igual
+           if (!wakeLock.isHeld) wakeLock.acquire(12 * 60 * 60 * 1000L)
         val notification = createNotification("Seguimiento activo - Device $repartidorId")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
