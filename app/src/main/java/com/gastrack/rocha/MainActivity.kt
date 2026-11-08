@@ -29,9 +29,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
         checkPermissions()
-        
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -60,9 +58,16 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun GasTrackScreen() {
+        // CORREGIDO: antes eran "7" y "8" de Turso.
+        // Ahora tienen que ser los ID reales de la tabla repartidores en Postgres.
+        // Para saberlos: en la web abri consola y pone:
+        // fetch('/api/postgres?table=repartidores').then(r=>r.json()).then(console.log)
+        // Y copia el "id" de Antonio y de Jose y pegalo aca abajo.
+        // Si todavia no los tenes, deja "7" y "8" por ahora, la web igual los va a mostrar,
+        // pero sin el nombre. Lo ideal es cambiarlos.
         var selectedDevice by remember { mutableStateOf("7") }
         var isTracking by remember { mutableStateOf(LocationTrackingService.isRunning) }
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -72,13 +77,14 @@ class MainActivity : ComponentActivity() {
         ) {
             Text(text = "🔥 GasTrack Rocha", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Turso megal-erp - Rocha", style = MaterialTheme.typography.bodySmall)
-            
+            // CORREGIDO: era "Turso megal-erp - Rocha"
+            Text(text = "Postgres - Rocha", style = MaterialTheme.typography.bodySmall)
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             Text(text = "Seleccioná repartidor:")
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = selectedDevice == "7",
@@ -91,9 +97,9 @@ class MainActivity : ComponentActivity() {
                     label = { Text("Jose (8)") }
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Button(
                 onClick = {
                     if (isTracking) {
@@ -108,17 +114,19 @@ class MainActivity : ComponentActivity() {
             ) {
                 Text(if (isTracking) "🛑 Detener Seguimiento" else "📍 Iniciar Seguimiento - Device $selectedDevice")
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
-                text = if (isTracking) "✅ Enviando GPS a https://megalweb.vercel.app/api/gps?device_id=$selectedDevice" 
-                       else "⏸️ Detenido",
+                // CORREGIDO: era /api/gps?device_id=
+                // Ahora es /api/postgres?table=gps_locations
+                text = if (isTracking) "✅ Enviando GPS a https://megalweb.vercel.app/api/postgres?table=gps_locations - Repartidor $selectedDevice"
+                       else "⏸ Detenido",
                 style = MaterialTheme.typography.bodySmall
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Instrucciones:", style = MaterialTheme.typography.titleSmall)
@@ -149,4 +157,3 @@ class MainActivity : ComponentActivity() {
         Toast.makeText(this, "Seguimiento detenido", Toast.LENGTH_SHORT).show()
     }
 }
-
