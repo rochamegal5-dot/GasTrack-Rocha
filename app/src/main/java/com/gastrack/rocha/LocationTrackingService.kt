@@ -12,6 +12,11 @@ import com.google.android.gms.location.*
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.*
 
 class LocationTrackingService : Service() {
 
@@ -88,75 +93,32 @@ class LocationTrackingService : Service() {
         if (location.accuracy > 30f) return
         serviceScope.launch {
             try {
-                val speed = if (location.hasSpeed() && location.speed > 0) location.speed.toDouble()
+                val speedMs = if (location.hasSpeed() && location.speed > 0) location.speed.toDouble()
                 else if (lastUploadedLocation != null) {
                     val distance = location.distanceTo(lastUploadedLocation!!)
                     val timeDiff = (location.time - lastUploadedLocation!!.time) / 1000.0
                     if (timeDiff > 0) distance / timeDiff else 0.0
                 } else 0.0
 
-                val deviceId = repartidorId.toIntOrNull() ?: 7
-                val tursoUrl = "https://megalweb.vercel.app/api/gps?device_id=$deviceId&lat=${location.latitude}&lng=${location.longitude}&velocidad=$speed"
-                val request = Request.Builder().url(tursoUrl).build()
-                httpClient.newCall(request).execute().use { response ->
-                    println("Turso OK: ${response.code}")
+                // CORREGIDO: antes mandaba velocidad en m/s, ahora en km/h como espera la web
+                val speedKmh = speedMs * 3.6
+                val fechaLocal = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+                    timeZone = TimeZone.getTimeZone("America/Montevideo")
+                }.format(Date())
+
+                // CORREGIDO: antes GET a /api/gps (Turso) - ahora POST a /api/postgres
+                val json = JSONObject().apply {
+                    put("repartidor_id", repartidorId)
+                    put("device_id", repartidorId)
+                    put("lat", location.latitude)
+                    put("lng", location.longitude)
+                    put("latitude", location.latitude)
+                    put("longitude", location.longitude)
+                    put("velocidad", speedKmh)
+                    put("speed", speedKmh)
+                    put("bateria", 0)
+                    put("fecha_local", fechaLocal)
+                    put("hoy", fechaLocal)
                 }
 
-                lastUploadedLocation = location
-                val speedKmh = (speed * 3.6).toInt()
-                updateNotification("En vivo - ${speedKmh} km/h - Device $deviceId")
-
-            } catch (e: Exception) {
-                println("Error: ${e.message}")
-            }
-        }
-    }
-
-    private fun createNotification(text: String): Notification {
-        createNotificationChannel()
-        val stopIntent = Intent(this, LocationTrackingService::class.java).apply { action = ACTION_STOP }
-        val stopPending = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("GasTrack Rocha")
-            .setContentText(text)
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setOngoing(true)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Detener", stopPending)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
-    }
-
-    private fun updateNotification(text: String) {
-        try {
-            val notification = createNotification(text)
-            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            manager.notify(NOTIFICATION_ID, notification)
-        } catch (_: Exception) {}
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "Seguimiento GPS", NotificationManager.IMPORTANCE_LOW)
-            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
-        }
-    }
-
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        val restartIntent = Intent(this, LocationTrackingService::class.java).apply {
-            action = ACTION_START
-            putExtra(EXTRA_REPARTIDOR_ID, repartidorId)
-        }
-        val pending = PendingIntent.getService(this, 1, restartIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, android.os.SystemClock.elapsedRealtime() + 1000, pending)
-        super.onTaskRemoved(rootIntent)
-    }
-
-    override fun onDestroy() {
-        stopTracking()
-        serviceScope.cancel()
-        super.onDestroy()
-    }
-}
-
+                val body = json
