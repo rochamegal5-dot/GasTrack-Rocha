@@ -27,16 +27,16 @@ class MainActivity : ComponentActivity() {
     // Antonio = "7" | Jose = "8"
     private var repartidorSeleccionado by mutableStateOf("7")
     private var estaRastreando by mutableStateOf(false)
-
-    private val permisosLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { resultados ->
-        // Si dio los permisos, no hacemos nada solo. El usuario aprieta Iniciar.
-        val todoOk = resultados.values.all { it }
-        if (!todoOk) {
-            // Si falta alguno, igual dejamos usar la UI, el servicio va a pedirlo de nuevo
-        }
+   private val permisosLauncher = registerForActivityResult(
+    ActivityResultContracts.RequestMultiplePermissions()
+) { resultados ->
+    val gpsOk = resultados[Manifest.permission.ACCESS_FINE_LOCATION] == true
+    if (gpsOk) {
+        pedirPermisoFondo() // <-- AGREGAR ESTA LÍNEA
     }
+}
+
+  
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,26 +70,32 @@ class MainActivity : ComponentActivity() {
         estaRastreando = prefs.getBoolean("was_running", false)
     }
 
-    private fun pedirPermisos() {
-        val permisos = mutableListOf(
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-            Manifest.permission.FOREGROUND_SERVICE,
-            Manifest.permission.FOREGROUND_SERVICE_LOCATION,
-            Manifest.permission.WAKE_LOCK,
-            Manifest.permission.RECEIVE_BOOT_COMPLETED
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permisos.add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-        val faltantes = permisos.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-        if (faltantes.isNotEmpty()) {
-            permisosLauncher.launch(faltantes.toTypedArray())
+private fun pedirPermisos() {
+    val permisos = mutableListOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        permisos.add(Manifest.permission.POST_NOTIFICATIONS)
+    }
+    val faltantes = permisos.filter {
+        ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+    }
+    if (faltantes.isNotEmpty()) {
+        permisosLauncher.launch(faltantes.toTypedArray())
+    }
+}
+private val permisoFondoLauncher = registerForActivityResult(
+    ActivityResultContracts.RequestPermission()
+) { _ -> }
+
+private fun pedirPermisoFondo() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permisoFondoLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
     }
+}
 
     private fun startTracking(repartidorId: String) {
         // Guardar para BootReceiver y para que no se pierda al reiniciar
