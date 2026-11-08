@@ -88,8 +88,14 @@ class LocationTrackingService : Service() {
         } catch (e: SecurityException) { stopTracking() }
     }
 
-    private fun stopTracking() {
-        isRunning = false
+private fun stopTracking() {
+    // AVISAR QUE YA NO ESTABA CORRIENDO
+    getSharedPreferences("gastrack", Context.MODE_PRIVATE).edit()
+        .putBoolean("was_running", false)
+        .apply()
+
+    isRunning = false
+    // ... resto de tu stopTracking igual
         try { fusedLocationClient.removeLocationUpdates(locationCallback) } catch (_: Exception) {}
         if (wakeLock.isHeld) wakeLock.release()
         stopForeground(STOP_FOREGROUND_REMOVE)
