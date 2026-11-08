@@ -107,7 +107,9 @@ private fun pedirPermisoFondo() {
 
         val intent = Intent(this, LocationTrackingService::class.java).apply {
             action = LocationTrackingService.ACTION_START
-            putExtra("repartidor_id", repartidorId) // String "7" o "8"
+            // DESPUÉS - BIEN
+            putExtra(LocationTrackingService.EXTRA_REPARTIDOR_ID, repartidorId)
+           
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
