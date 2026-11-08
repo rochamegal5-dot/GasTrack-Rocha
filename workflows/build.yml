@@ -16,16 +16,17 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # CORREGIDO: esto faltaba, instala el SDK de Android en la ruta correcta
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.5'
 
+      # CORREGIDO: ya no usa ./gradlew porque no existe en el repo
       - name: Build APK
-        run: ./gradlew assembleDebug --stacktrace
-        # CORREGIDO: no pisar ANDROID_HOME, GitHub ya lo pone bien con setup-android
+        run: gradle assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
