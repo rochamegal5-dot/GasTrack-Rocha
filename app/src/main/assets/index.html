@@ -11,6 +11,34 @@
         .btn-action:active { transform: scale(0.95); }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
         .toast-msg { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 200; padding: 12px 24px; border-radius: 8px; color: white; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: fadeInOut 4s forwards; max-width: 90%; text-align: center; }
+        /* FIX - cantidades siempre blancas con numeros negros */
+        input[type="number"],
+        input[type="text"],
+        input,
+        select {
+          background: #ffffff !important;
+          color: #000000 !important;
+          -webkit-text-fill-color: #000000 !important;
+        }
+        input::placeholder {
+          color: #6b7280 !important;
+          -webkit-text-fill-color: #6b7280 !important;
+        }
+        #ventaCantidad,
+        #inputKmInicio,
+        #inputVuelto,
+        #encTelefono,
+        #encNombre,
+        #inputClienteNombre,
+        [id^="stockInicial_"],
+        [id^="recVac_"],
+        [id^="recLlen_"] {
+          background: #ffffff !important;
+          color: #000000 !important;
+          font-weight: 900 !important;
+          -webkit-text-fill-color: #000000 !important;
+        }
+        select option { background:#ffffff !important; color:#000000 !important; }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translateX(-50%) translateY(-20px); } 15% { opacity: 1; transform: translateX(-50%) translateY(0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
     </style>
 </head>
@@ -35,7 +63,7 @@
             <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer btn-action">EMPEZAR EL DIA</button>
         </div>
     </div>
-    <div id="pantallaTrabajo" style="display: none;" class="max-w-lg mx-auto">
+     <div id="pantallaTrabajo" style="display: none;" class="max-w-lg mx-auto">
         <div class="bg-blue-900 text-white p-3 sticky top-0 z-50 shadow-lg flex justify-between items-center">
             <h2 class="text-sm font-bold truncate" id="nombreRepartidorTop">Repartidor</h2>
             <div class="flex gap-2">
@@ -44,6 +72,14 @@
                 <button onclick="mostrarPantallaCierre()" class="bg-orange-500 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow btn-action">Caja</button>
             </div>
         </div>
+        <div id="moduloVentas" class="p-4 space-y-4">
+            <div class="bg-indigo-100 p-3 rounded-xl shadow-sm border-l-4 border-indigo-500">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-xs font-bold text-indigo-800">STOCK EN CAMIONETA</p>
+                    <button onclick="abrirRecarga()" class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-bold cursor-pointer btn-action">+ Recarga</button>
+                </div>
+                <div id="stockGridUI" class="grid grid-cols-3 gap-2"></div>
+            </div>
         <div id="moduloVentas" class="p-4 space-y-4">
             <div class="bg-indigo-100 p-3 rounded-xl shadow-sm border-l-4 border-indigo-500">
                 <div class="flex justify-between items-center mb-2">
