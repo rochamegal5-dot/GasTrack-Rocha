@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>App Gas - Repartidor</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
         .btn-action:active { transform: scale(0.95); }
@@ -16,19 +15,13 @@
     </style>
 </head>
 <body class="pb-20">
-
-    <!-- 1. LOGIN -->
     <div id="pantallaLogin" class="min-h-screen flex items-center justify-center bg-blue-900 p-6">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
             <h1 class="text-3xl font-black text-blue-800 mb-2">App Gas</h1>
-            <select id="selectRepartidor" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-lg font-bold text-center mb-4">
-                <option value="">Cargando...</option>
-            </select>
+            <select id="selectRepartidor" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-lg font-bold text-center mb-4"><option value="">Cargando...</option></select>
             <button onclick="iniciarSesion()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer btn-action">Ingresar</button>
         </div>
     </div>
-
-    <!-- 2. INICIO JORNADA -->
     <div id="pantallaInicioJornada" style="display: none;" class="min-h-screen flex items-center justify-center bg-yellow-50 p-6">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-black text-center text-yellow-700 mb-4">Iniciar Jornada</h2>
@@ -42,18 +35,15 @@
             <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer btn-action">EMPEZAR EL DIA</button>
         </div>
     </div>
-
-    <!-- 3. TRABAJO -->
     <div id="pantallaTrabajo" style="display: none;" class="max-w-lg mx-auto">
         <div class="bg-blue-900 text-white p-3 sticky top-0 z-50 shadow-lg flex justify-between items-center">
             <h2 class="text-sm font-bold truncate" id="nombreRepartidorTop">Repartidor</h2>
             <div class="flex gap-2">
+                <button onclick="abrirEncontrado()" class="bg-purple-600 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow btn-action">+ Encontrado</button>
                 <button onclick="mostrarPendientes()" class="bg-yellow-500 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow btn-action">Pendientes</button>
                 <button onclick="mostrarPantallaCierre()" class="bg-orange-500 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow btn-action">Caja</button>
             </div>
         </div>
-
-        <!-- MÓDULO VENTAS -->
         <div id="moduloVentas" class="p-4 space-y-4">
             <div class="bg-indigo-100 p-3 rounded-xl shadow-sm border-l-4 border-indigo-500">
                 <div class="flex justify-between items-center mb-2">
@@ -75,7 +65,7 @@
                 <h3 class="font-bold text-gray-800 mb-3 text-lg">Registrar Venta</h3>
                 <div class="space-y-3">
                     <select id="ventaTipoCliente" onchange="actualizarGarrafas()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold bg-blue-50 cursor-pointer">
-                        <option value="">-- Tipo de Cliente --</option><option value="particular">Particular</option><option value="particular_mides">Particular Mides</option><option value="comercio">Comercio</option><option value="comercio_mides">Comercio Mides</option>
+                        <option value="">-- Tipo de Cliente --</option><option value="particular">Particular</option><option value="particular_mides">Particular Mides</option><option value="comercio">Comercio</option><option value="comercio_especial">Comercio Especial</option><option value="comercio_mides">Comercio Mides</option>
                     </select>
                     <div id="seccionClienteComercio" style="display: none;">
                         <div id="alertaGeocerca" style="display: none;" class="p-2 bg-green-100 border border-green-400 text-green-800 rounded-lg text-xs font-bold text-center mb-2">📍 Venta automática en este local</div>
@@ -103,8 +93,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- MODAL CONFIRMAR VENTA -->
         <div id="modalConfirmVenta" style="display: none;" class="modal-overlay">
             <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
                 <h3 class="text-xl font-black text-gray-800">¿Confirmar Venta?</h3>
@@ -115,8 +103,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- MODAL PREGUNTA GPS (¿VENDISTE?) -->
         <div id="modalPreguntaGPS" style="display: none;" class="modal-overlay">
             <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
                 <div class="text-6xl">🛑</div>
@@ -128,8 +114,17 @@
                 </div>
             </div>
         </div>
-
-        <!-- MÓDULO PENDIENTES -->
+        <div id="modalEncontrado" style="display:none;" class="modal-overlay">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-sm space-y-3">
+                <h3 class="text-xl font-black">Nuevo punto Encontrado</h3>
+                <input id="encNombre" placeholder="Nombre del comercio" class="w-full px-3 py-3 border-2 rounded-lg font-bold">
+                <input id="encTelefono" placeholder="Teléfono" class="w-full px-3 py-3 border-2 rounded-lg font-bold">
+                <div class="flex gap-2">
+                    <button onclick="cerrarEncontrado()" class="flex-1 bg-gray-300 py-3 rounded-xl font-bold">Cancelar</button>
+                    <button onclick="registrarEncontrado()" class="flex-1 bg-purple-600 text-white py-3 rounded-xl font-black">Guardar</button>
+                </div>
+            </div>
+        </div>
         <div id="moduloPendientes" style="display: none;" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 p-4 overflow-y-auto">
             <div class="bg-white rounded-2xl p-6 max-w-lg mx-auto relative">
                 <button onclick="cerrarPendientes()" class="absolute top-3 right-4 text-2xl font-bold text-gray-400 cursor-pointer">✖</button>
@@ -137,8 +132,6 @@
                 <div id="listaPendientes" class="space-y-3"></div>
             </div>
         </div>
-
-        <!-- MÓDULO CIERRE -->
         <div id="moduloCierre" style="display: none;" class="p-4 space-y-4">
             <button onclick="mostrarPantallaVentas()" class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 flex items-center justify-center btn-action"><span class="mr-2">⬅</span> Volver a Ventas</button>
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
@@ -151,7 +144,7 @@
                     <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta Crédito:</span> <span id="informeCredito">$0</span></div>
                     <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta Débito:</span> <span id="informeDebito">$0</span></div>
                     <div class="flex justify-between font-bold text-orange-900"><span>Pago en el local:</span> <span id="informeLocal">$0</span></div><hr class="border-orange-300 my-2">
-                    <p class="font-black text-yellow-700 mb-2">⚠️ Ventas Fiadas:</p><div class="flex justify-between font-bold text-yellow-800"><span>Total Fiado:</span> <span id="informeFiado" class="text-red-600">$0</span></div><hr class="border-orange-300 my-2">
+                    <p class="font-black text-yellow-700 mb-2">⚠ Ventas Fiadas:</p><div class="flex justify-between font-bold text-yellow-800"><span>Total Fiado:</span> <span id="informeFiado" class="text-red-600">$0</span></div><hr class="border-orange-300 my-2">
                     <div class="flex justify-between font-black text-orange-900 text-lg mt-1"><span>TOTAL VENDIDO:</span> <span id="informeTotalGeneral">$0</span></div><hr class="border-orange-300 my-2">
                     <div class="flex justify-between font-bold text-green-700"><span>Vuelto Inicial:</span> <span id="informeVuelto">$0</span></div>
                     <div class="flex justify-between font-bold text-red-700"><span>Entregado Parcial:</span> <span id="informeEntregadoParcial">$0</span></div>
@@ -162,19 +155,32 @@
             </div>
         </div>
     </div>
-
     <script>
-        const SUPABASE_URL = 'https://plnodukthcnnwmxlzwsm.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsbm9kdWt0aGNubndteGx6d3NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTkwMTcsImV4cCI6MjA5NTYzNTAxN30.WkTzFvNiM0BotwTLtxzQpq9-b08stueIlsp8K0b9iq8';
-        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // === MEGAL - TODO CON VERCEL POSTGRES, NADA DE SUPABASE ===
+        const API = '/api/postgres';
+        async function pg(table, metodo='GET', body=null, extra=''){
+          let url = API + '?table=' + table + extra;
+          let opt = { method: metodo, headers: { 'Content-Type': 'application/json' } };
+          if(body) opt.body = JSON.stringify(body);
+          const r = await fetch(url, opt);
+          const j = await r.json().catch(()=>({}));
+          if(j && j.error) throw new Error(j.error);
+          if(Array.isArray(j)) return j;
+          return j.data || j.rows || j || [];
+        }
+        async function pgGet(table, extra=''){ const d = await pg(table,'GET',null,extra); return Array.isArray(d)?d:[]; }
+        async function pgPost(table, body){ return await pg(table,'POST',body); }
+        function uid(p){ return p+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6); }
+        function hoyUY(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+        function esHoy(fecha){ if(!fecha) return false; const s=String(fecha); return s.slice(0,10)===hoyUY(); }
+        function num(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
+        function nombreCliente(c){ if(!c) return 'Cliente'; const n=[c.nombre,c.apellido,c.nombre1,c.apellido1].filter(Boolean).join(' ').trim(); return n || c.direccion || 'Cliente'; }
 
         let repartidorActual = { id: '', nombre: '' };
         let productosCamioneta = [];
         let clientesCache = [];
         let fleteConfigurado = 0;
         const RECARGO_TARJETA_CREDITO = 100;
-
-        // Variables GPS y Puntos Ruta
         let gpsWatchId = null;
         let lastGpsPosition = null;
         let lastMovementTime = Date.now();
@@ -184,152 +190,196 @@
         let puntosPreguntadosHoy = new Set();
         let puntoActualPregunta = null;
 
-        // ==========================================
-        // UTILIDADES UI
-        // ==========================================
-        function mostrarToast(mensaje, tipo = 'exito') {
-            const color = tipo === 'exito' ? 'bg-green-600' : (tipo === 'error' ? 'bg-red-600' : 'bg-blue-600');
-            const div = document.createElement('div'); div.className = `toast-msg ${color}`; div.textContent = mensaje;
-            document.body.appendChild(div); setTimeout(() => div.remove(), 4000);
+        function mostrarToast(mensaje, tipo='exito'){
+            const color = tipo==='exito' ? 'bg-green-600' : (tipo==='error' ? 'bg-red-600' : 'bg-blue-600');
+            const div=document.createElement('div'); div.className='toast-msg '+color; div.textContent=mensaje;
+            document.body.appendChild(div); setTimeout(()=>div.remove(),4000);
         }
-        function hablar(mensaje) {
-            if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(mensaje); u.lang = 'es-UY'; window.speechSynthesis.speak(u); }
+        function hablar(mensaje){ if('speechSynthesis' in window){ window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(mensaje); u.lang='es-UY'; window.speechSynthesis.speak(u); } }
+
+        document.addEventListener('DOMContentLoaded', async()=>{ await cargarRepartidoresLogin(); await cargarFlete(); verificarSesionPrevia(); });
+        async function cargarFlete(){ try{ const conf=await pgGet('configuraciones'); const f=conf.find(c=>c.clave==='flete_reparto'); if(f) fleteConfigurado=num(f.valor); document.getElementById('textoFleteAuto').textContent="$"+fleteConfigurado.toLocaleString('es-UY'); }catch(e){} }
+        async function cargarRepartidoresLogin(){ const select=document.getElementById('selectRepartidor'); select.innerHTML='<option value="">Cargando...</option>'; try{ const data=await pgGet('repartidores'); select.innerHTML='<option value="">-- Seleccione --</option>'; data.filter(r=>String(r.activo)==='true'||r.activo===true||r.activo===1).forEach(r=>{ const o=document.createElement('option'); o.value=r.id; o.textContent=r.nombre; select.appendChild(o); }); }catch(e){ select.innerHTML='<option value="">Error cargando</option>'; } }
+        function iniciarSesion(){ const s=document.getElementById('selectRepartidor'); if(!s.value) return; repartidorActual.id=s.value; repartidorActual.nombre=s.options[s.selectedIndex].text; localStorage.setItem('rep_id',repartidorActual.id); localStorage.setItem('rep_nombre',repartidorActual.nombre); document.getElementById('pantallaLogin').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; document.getElementById('nombreRepartidorTop').textContent=repartidorActual.nombre; document.getElementById('fechaHoy').textContent=new Date().toLocaleDateString('es-UY',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); cargarDatosJornada(); }
+        function verificarSesionPrevia(){ const rId=localStorage.getItem('rep_id'), rN=localStorage.getItem('rep_nombre'), jA=localStorage.getItem('jornada_activa'); if(rId&&rN){ repartidorActual.id=rId; repartidorActual.nombre=rN; document.getElementById('nombreRepartidorTop').textContent=rN; if(jA==='true'){ document.getElementById('pantallaLogin').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='none'; document.getElementById('pantallaTrabajo').style.display='block'; inicializarPantallaTrabajo(); } else { document.getElementById('pantallaLogin').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; cargarDatosJornada(); } } }
+
+        // STOCK helpers - reemplazan los rpc de Supabase
+        async function ajustarStockDeposito(producto_id, dLlenas, dVacias){
+            const all=await pgGet('stock_deposito'); let row=all.find(s=>String(s.producto_id)===String(producto_id));
+            if(!row) row={ id: uid('dep'), producto_id: producto_id, llenas:0, vacias:0 };
+            await pgPost('stock_deposito',{ ...row, llenas:(parseInt(row.llenas)||0)+dLlenas, vacias:(parseInt(row.vacias)||0)+dVacias });
+        }
+        async function ajustarStockCamioneta(producto_id, dLlenas, dVacias, dDef){
+            const all=await pgGet('stock_camioneta'); let row=all.find(s=>String(s.producto_id)===String(producto_id)&&String(s.repartidor_id)===String(repartidorActual.id));
+            if(!row) row={ id: uid('cam'), repartidor_id: repartidorActual.id, producto_id: producto_id, llenas:0, vacias:0, defectuosas:0 };
+            await pgPost('stock_camioneta',{ ...row, llenas:(parseInt(row.llenas)||0)+dLlenas, vacias:(parseInt(row.vacias)||0)+dVacias, defectuosas:(parseInt(row.defectuosas)||0)+(dDef||0) });
         }
 
-        // ==========================================
-        // INICIO Y CONFIGURACIÓN
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', async () => { await cargarRepartidoresLogin(); await cargarFlete(); verificarSesionPrevia(); });
-        async function cargarFlete() { try { const { data } = await db.from('configuraciones').select('valor').eq('clave', 'flete_reparto').maybeSingle(); if (data) fleteConfigurado = parseFloat(data.valor) || 0; document.getElementById('textoFleteAuto').textContent = "$" + fleteConfigurado.toLocaleString('es-UY'); } catch (e) {} }
-        async function cargarRepartidoresLogin() { const select = document.getElementById('selectRepartidor'); select.innerHTML = '<option value="">Cargando...</option>'; try { const { data } = await db.from('repartidores').select('*').eq('activo', true).order('nombre'); select.innerHTML = '<option value="">-- Seleccione --</option>'; data.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = r.nombre; select.appendChild(o); }); } catch (e) {} }
-        
-        function iniciarSesion() { const s = document.getElementById('selectRepartidor'); if (!s.value) return; repartidorActual.id = s.value; repartidorActual.nombre = s.options[s.selectedIndex].text; localStorage.setItem('rep_id', repartidorActual.id); localStorage.setItem('rep_nombre', repartidorActual.nombre); document.getElementById('pantallaLogin').style.display = 'none'; document.getElementById('pantallaInicioJornada').style.display = 'flex'; document.getElementById('nombreRepartidorTop').textContent = repartidorActual.nombre; document.getElementById('fechaHoy').textContent = new Date().toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); cargarDatosJornada(); }
-        function verificarSesionPrevia() { const rId = localStorage.getItem('rep_id'), rN = localStorage.getItem('rep_nombre'), jA = localStorage.getItem('jornada_activa'); if (rId && rN) { repartidorActual.id = rId; repartidorActual.nombre = rN; document.getElementById('nombreRepartidorTop').textContent = rN; if(jA==='true') { document.getElementById('pantallaLogin').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='none'; document.getElementById('pantallaTrabajo').style.display='block'; inicializarPantallaTrabajo(); } else { document.getElementById('pantallaLogin').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; cargarDatosJornada(); } } }
+        async function cargarDatosJornada(){ const c=document.getElementById('contenedorStockInicial'); c.innerHTML=''; try{ const all=await pgGet('productos'); productosCamioneta=all.filter(p=>['garrafa_11','garrafa_13','garrafa_45'].includes(p.tipo)); productosCamioneta.forEach(p=>{ const d=document.createElement('div'); d.className='bg-gray-100 p-2 rounded-lg text-center'; d.innerHTML='<label class="block text-xs font-bold text-gray-700 mb-1">'+p.nombre+'</label><input type="number" id="stockInicial_'+p.id+'" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">'; c.appendChild(d); }); }catch(e){} }
+        async function registrarInicioJornada(){
+            const km=document.getElementById('inputKmInicio').value, v=document.getElementById('inputVuelto').value;
+            if(!km||parseInt(km)<=0){ mostrarToast('Ingresá KM','error'); return; }
+            localStorage.setItem('km_inicio',km); localStorage.setItem('vuelto_inicio',v); localStorage.setItem('entregado_parcial','0');
+            try{
+                const sd=await pgGet('stock_deposito'); let valid=true, movs=[];
+                for(const p of productosCamioneta){ const cant=parseInt(document.getElementById('stockInicial_'+p.id).value)||0; const disp=sd.find(s=>String(s.producto_id)===String(p.id))?.llenas||0; if(cant>disp){ mostrarToast('Sin stock '+p.nombre,'error'); valid=false; break; } if(cant>0) movs.push({producto_id:p.id,cantidad:cant}); }
+                if(!valid) return;
+                await pgPost('jornadas',{ id: uid('jor'), repartidor_id: repartidorActual.id, fecha: hoyUY(), hora_salida: new Date().toLocaleTimeString('es-UY'), km_inicio: parseInt(km), stock_11_inicial: 0, stock_13_inicial: 0, stock_45_inicial: 0, cambio_inicial: num(v), estado:'abierta' });
+                for(const m of movs){
+                    await ajustarStockDeposito(m.producto_id,-m.cantidad,0);
+                    await ajustarStockCamioneta(m.producto_id,m.cantidad,0,0);
+                    await pgPost('movimientos_stock',{ id: uid('mov'), tipo_mov:'carga_camioneta', producto_id:m.producto_id, repartidor_id:repartidorActual.id, llenas:-m.cantidad, vacias:0, defectuosas:0, observaciones:'Carga inicial', fecha: new Date().toISOString() });
+                }
+                hablar("Jornada iniciada."); localStorage.setItem('jornada_activa','true');
+                document.getElementById('pantallaInicioJornada').style.display='none'; document.getElementById('pantallaTrabajo').style.display='block'; inicializarPantallaTrabajo();
+            }catch(e){ mostrarToast('Error: '+e.message,'error'); }
+        }
 
-        // ==========================================
-        // JORNADA
-        // ==========================================
-        async function cargarDatosJornada() { const c = document.getElementById('contenedorStockInicial'); c.innerHTML = ''; try { const { data } = await db.from('productos').select('*').in('tipo', ['garrafa_11', 'garrafa_13', 'garrafa_45']).order('nombre'); productosCamioneta = data; data.forEach(p => { const d = document.createElement('div'); d.className='bg-gray-100 p-2 rounded-lg text-center'; d.innerHTML=`<label class="block text-xs font-bold text-gray-700 mb-1">${p.nombre}</label><input type="number" id="stockInicial_${p.id}" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">`; c.appendChild(d); }); } catch (e) {} }
-        async function registrarInicioJornada() { const km = document.getElementById('inputKmInicio').value, v = document.getElementById('inputVuelto').value; if(!km||parseInt(km)<=0){mostrarToast('Ingresá KM','error');return;} localStorage.setItem('km_inicio', km); localStorage.setItem('vuelto_inicio', v); localStorage.setItem('entregado_parcial', '0'); try { const { data: sd } = await db.from('stock_deposito').select('producto_id, llenas').in('producto_id', productosCamioneta.map(p=>p.id)); let valid=true, movs=[]; for(const p of productosCamioneta){ const cant=parseInt(document.getElementById(`stockInicial_${p.id}`).value)||0; const disp=sd.find(s=>s.producto_id===p.id)?.llenas||0; if(cant>disp){mostrarToast(`Sin stock ${p.nombre}`,'error');valid=false;break;} if(cant>0)movs.push({producto_id:p.id,cantidad:cant}); } if(!valid)return; for(const m of movs){ await db.rpc('modificar_stock_deposito',{p_producto_id:m.producto_id,p_llenas:-m.cantidad,p_vacias:0,p_defectuosas:0}); await db.rpc('modificar_stock_camioneta',{p_repartidor_id:repartidorActual.id,p_producto_id:m.producto_id,p_llenas:m.cantidad,p_vacias:0,p_defectuosas:0}); await db.from('movimientos_stock').insert({tipo_mov:'carga_camioneta',producto_id:m.producto_id,repartidor_id:repartidorActual.id,llenas:-m.cantidad,observaciones:'Carga inicial'}); } hablar("Jornada iniciada."); localStorage.setItem('jornada_activa','true'); document.getElementById('pantallaInicioJornada').style.display='none'; document.getElementById('pantallaTrabajo').style.display='block'; inicializarPantallaTrabajo(); } catch (e) { mostrarToast('Error: '+e.message,'error'); } }
+        async function inicializarPantallaTrabajo(){ if(productosCamioneta.length===0){ const all=await pgGet('productos'); productosCamioneta=all.filter(p=>['garrafa_11','garrafa_13','garrafa_45'].includes(p.tipo)); } await cargarStockCamionetaUI(); await cargarSelectsVentas(); iniciarSeguimientoGPS(); }
+        async function cargarStockCamionetaUI(){ const g=document.getElementById('stockGridUI'); g.innerHTML=''; try{ const all=await pgGet('stock_camioneta'); const s=all.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)); let h=''; productosCamioneta.forEach(p=>{ const i=s.find(x=>String(x.producto_id)===String(p.id)); h+='<div class="bg-white p-2 rounded-lg text-center shadow-sm"><p class="text-[10px] font-bold text-gray-500 truncate">'+p.nombre.replace('Garrafa ','')+'</p><p class="text-2xl font-black text-green-700">'+(i?i.llenas:0)+'</p><p class="text-[10px] font-bold text-gray-400">Vac: '+(i?i.vacias:0)+'</p></div>'; }); g.innerHTML=h; }catch(e){} }
+        async function abrirRecarga(){
+            document.getElementById('seccionRecarga').style.display='block'; const c=document.getElementById('contenedorRecarga'); c.innerHTML='';
+            try{
+                const allMov=await pgGet('movimientos_stock'); const l=allMov.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)&&x.tipo_mov==='recarga_camioneta').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+                document.getElementById('ultimaRecargaHora').textContent=l.length>0?"Última: "+new Date(l[0].fecha||l[0].created_at).toLocaleTimeString('es-UY'):"Sin recargas";
+                const allSc=await pgGet('stock_camioneta'); const sc=allSc.filter(x=>String(x.repartidor_id)===String(repartidorActual.id));
+                productosCamioneta.forEach(p=>{ const i=sc.find(x=>String(x.producto_id)===String(p.id)); const d=document.createElement('div'); d.className='bg-white p-2 rounded-lg text-center shadow-sm border'; d.innerHTML='<label class="block text-xs font-bold text-gray-700 mb-1">'+p.nombre.replace('Garrafa ','')+'</label><div class="mb-1"><label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label><input type="number" id="recVac_'+p.id+'" min="0" max="'+(i?i.vacias:0)+'" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div><label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label><input type="number" id="recLlen_'+p.id+'" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700"></div>'; c.appendChild(d); });
+            }catch(e){}
+        }
+        function cerrarRecarga(){ document.getElementById('seccionRecarga').style.display='none'; }
+        async function registrarRecarga(){
+            try{
+                const sd=await pgGet('stock_deposito'); let movs=[], valid=true;
+                for(const p of productosCamioneta){ const v=parseInt(document.getElementById('recVac_'+p.id).value)||0, l=parseInt(document.getElementById('recLlen_'+p.id).value)||0; if(l>0){ const d=sd.find(s=>String(s.producto_id)===String(p.id))?.llenas||0; if(l>d){ mostrarToast('Sin depósito '+p.nombre,'error'); valid=false; break; } } if(v>0||l>0) movs.push({pid:p.id,v,l}); }
+                if(!valid) return;
+                for(const m of movs){ await ajustarStockDeposito(m.pid,-m.l,m.v); await ajustarStockCamioneta(m.pid,m.l,-m.v,0); await pgPost('movimientos_stock',{ id: uid('mov'), tipo_mov:'recarga_camioneta', producto_id:m.pid, repartidor_id:repartidorActual.id, llenas:m.l, vacias:-m.v, defectuosas:0, fecha: new Date().toISOString() }); }
+                hablar("Recarga exitosa"); cerrarRecarga(); cargarStockCamionetaUI();
+            }catch(e){ mostrarToast('Error: '+e.message,'error'); }
+        }
 
-        // ==========================================
-        // TRABAJO, STOCK Y RECARGA
-        // ==========================================
-        async function inicializarPantallaTrabajo() { if(productosCamioneta.length===0){ const {data}=await db.from('productos').select('*').in('tipo',['garrafa_11','garrafa_13','garrafa_45']); if(data)productosCamioneta=data; } await cargarStockCamionetaUI(); await cargarSelectsVentas(); iniciarSeguimientoGPS(); }
-        async function cargarStockCamionetaUI() { const g = document.getElementById('stockGridUI'); g.innerHTML=''; try { const {data:s}=await db.from('stock_camioneta').select('*, productos(nombre)').eq('repartidor_id',repartidorActual.id); let h=''; productosCamioneta.forEach(p=>{ const i=s?.find(x=>x.producto_id===p.id); h+=`<div class="bg-white p-2 rounded-lg text-center shadow-sm"><p class="text-[10px] font-bold text-gray-500 truncate">${p.nombre.replace('Garrafa ','')}</p><p class="text-2xl font-black text-green-700">${i?i.llenas:0}</p><p class="text-[10px] font-bold text-gray-400">Vac: ${i?i.vacias:0}</p></div>`; }); g.innerHTML=h; } catch(e){} }
-        async function abrirRecarga() { document.getElementById('seccionRecarga').style.display='block'; const c=document.getElementById('contenedorRecarga'); c.innerHTML=''; try { const {data:l}=await db.from('movimientos_stock').select('created_at').eq('repartidor_id',repartidorActual.id).eq('tipo_mov','recarga_camioneta').order('created_at',{ascending:false}).limit(1); document.getElementById('ultimaRecargaHora').textContent=l&&l.length>0?"Última: "+new Date(l[0].created_at).toLocaleTimeString('es-UY'):"Sin recargas"; const {data:sc}=await db.from('stock_camioneta').select('*').eq('repartidor_id',repartidorActual.id); productosCamioneta.forEach(p=>{ const i=sc?.find(x=>x.producto_id===p.id); const d=document.createElement('div'); d.className='bg-white p-2 rounded-lg text-center shadow-sm border'; d.innerHTML=`<label class="block text-xs font-bold text-gray-700 mb-1">${p.nombre.replace('Garrafa ','')}</label><div class="mb-1"><label class="block text-[9px] font-bold text-gray-500">ENTREGO VACÍAS</label><input type="number" id="recVac_${p.id}" min="0" max="${i?i.vacias:0}" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div><label class="block text-[9px] font-bold text-green-700">LLEVO LLENAS</label><input type="number" id="recLlen_${p.id}" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700"></div>`; c.appendChild(d); }); } catch(e){} }
-        function cerrarRecarga() { document.getElementById('seccionRecarga').style.display='none'; }
-        async function registrarRecarga() { try { const {data:sd}=await db.from('stock_deposito').select('producto_id, llenas').in('producto_id',productosCamioneta.map(p=>p.id)); let movs=[],valid=true; for(const p of productosCamioneta){ const v=parseInt(document.getElementById(`recVac_${p.id}`).value)||0, l=parseInt(document.getElementById(`recLlen_${p.id}`).value)||0; if(l>0){const d=sd.find(s=>s.producto_id===p.id)?.llenas||0; if(l>d){mostrarToast(`Sin depósito ${p.nombre}`,'error');valid=false;break;}} if(v>0||l>0)movs.push({pid:p.id,v,l}); } if(!valid)return; for(const m of movs){ await db.rpc('modificar_stock_deposito',{p_producto_id:m.pid,p_llenas:-m.l,p_vacias:m.v,p_defectuosas:0}); await db.rpc('modificar_stock_camioneta',{p_repartidor_id:repartidorActual.id,p_producto_id:m.pid,p_llenas:m.l,p_vacias:-m.v,p_defectuosas:0}); await db.from('movimientos_stock').insert({tipo_mov:'recarga_camioneta',producto_id:m.pid,repartidor_id:repartidorActual.id,llenas:m.l,vacias:-m.v}); } hablar("Recarga exitosa"); cerrarRecarga(); cargarStockCamionetaUI(); } catch(e){mostrarToast('Error: '+e.message,'error');} }
+        async function cargarSelectsVentas(){
+            const s=document.getElementById('ventaTipoGarrafa'); s.innerHTML='<option value="">-- Producto --</option>';
+            productosCamioneta.forEach(p=>s.innerHTML+='<option value="'+p.id+'" data-precio="'+(p.precio_venta||p.precio||0)+'">'+p.nombre+' - $'+(p.precio_venta||p.precio||0)+'</option>');
+            try{ const all=await pgGet('clientes'); clientesCache=all.filter(x=>String(x.tipo||'').toLowerCase().includes('comercio')); const dl=document.getElementById('lista-comercios'); dl.innerHTML=''; clientesCache.forEach(x=>{ const o=document.createElement('option'); o.value=nombreCliente(x); dl.appendChild(o); }); }catch(e){}
+        }
+        function actualizarGarrafas(){ const t=document.getElementById('ventaTipoCliente').value; document.getElementById('inputClienteId').value=''; document.getElementById('inputClienteNombre').value=''; document.getElementById('seccionClienteComercio').style.display=(t==='comercio'||t==='comercio_especial'||t==='comercio_mides')?'block':'none'; document.getElementById('seccionFlete').style.display=(t==='particular'||t==='particular_mides')?'block':'none'; document.getElementById('alertaGeocerca').style.display='none'; calcularPrecioVenta(); }
+        function seleccionarCliente(){ const n=document.getElementById('inputClienteNombre').value; const c=clientesCache.find(x=>nombreCliente(x)===n); document.getElementById('inputClienteId').value=c?c.id:''; document.getElementById('alertaGeocerca').style.display=c?'block':'none'; }
+        function calcularPrecioVenta(){ const ps=document.getElementById('ventaTipoGarrafa'), pb=parseFloat(ps.options[ps.selectedIndex]?.dataset.precio||0), c=parseInt(document.getElementById('ventaCantidad').value)||0, m=document.getElementById('ventaModoVenta').value, tc=document.getElementById('ventaTipoCliente').value, mp=document.getElementById('ventaModalidad').value; let sub=0; if(m==='intercambio') sub=pb*c; else if(m==='envase_gas') sub=pb*c*1.5; let fl=0; if((tc==='particular'||tc==='particular_mides')&&m!=='cambio_falla') fl=fleteConfigurado; let rc=0; if(mp==='tarjeta_credito'&&m!=='cambio_falla') rc=RECARGO_TARJETA_CREDITO*c; document.getElementById('ventaTotalOculto').value=sub+fl+rc; document.getElementById('ventaTotalPantalla').textContent="$"+(sub+fl+rc).toLocaleString('es-UY'); }
+        function arreglarCantidad(){ const i=document.getElementById('ventaCantidad'); if(!i.value||parseInt(i.value)<1) i.value=1; calcularPrecioVenta(); }
+        function preValidarVenta(){
+            if(!document.getElementById('ventaTipoCliente').value){ mostrarToast('Seleccioná cliente','error'); return; }
+            if(!document.getElementById('ventaTipoGarrafa').value){ mostrarToast('Seleccioná producto','error'); return; }
+            if(document.getElementById('ventaTipoCliente').value.startsWith('comercio') && !document.getElementById('inputClienteId').value){ mostrarToast('Solo se puede vender como Comercio si elegís un comercio de la lista','error'); return; }
+            const ps=document.getElementById('ventaTipoGarrafa'), pn=ps.options[ps.selectedIndex].text.split(' - ')[0], mt=document.getElementById('ventaModalidad').options[document.getElementById('ventaModalidad').selectedIndex].text, md=document.getElementById('ventaModoVenta').options[document.getElementById('ventaModoVenta').selectedIndex].text, t=parseFloat(document.getElementById('ventaTotalOculto').value)||0;
+            document.getElementById('detalleConfirmVenta').innerHTML='<p><b>Producto:</b> '+pn+' (x'+document.getElementById('ventaCantidad').value+')</p><p><b>Modo:</b> '+md+'</p><p><b>Pago:</b> '+mt+'</p><p class="text-xl font-black text-green-700 mt-2">TOTAL: $'+t.toLocaleString('es-UY')+'</p>';
+            document.getElementById('modalConfirmVenta').style.display='flex';
+        }
+        function cancelarVentaModal(){ document.getElementById('modalConfirmVenta').style.display='none'; hablar("Cancelada"); }
+        async function registrarVenta(){
+            const b=document.getElementById('btnConfirmarFinal'); b.textContent='Procesando...'; b.disabled=true;
+            try{
+                const pid=document.getElementById('ventaTipoGarrafa').value, c=parseInt(document.getElementById('ventaCantidad').value)||0, m=document.getElementById('ventaModoVenta').value, t=parseFloat(document.getElementById('ventaTotalOculto').value)||0, mp=document.getElementById('ventaModalidad').value, cid=document.getElementById('inputClienteId').value||null, tc=document.getElementById('ventaTipoCliente').value;
+                const allSc=await pgGet('stock_camioneta'); const sc=allSc.find(x=>String(x.repartidor_id)===String(repartidorActual.id)&&String(x.producto_id)===String(pid));
+                if(c>(sc?parseInt(sc.llenas)||0:0)){ mostrarToast('Stock insuficiente','error'); return; }
+                let vr=(m==='intercambio')?c:0, df=(m==='cambio_falla')?c:0, ev=(mp==='fiado')?'Pendiente':'Cobrado';
+                const ventaId=uid('vta');
+                await pgPost('ventas',{ id: ventaId, origen:'app', tipo_cliente: tc, tipo_venta:m, repartidor_id:repartidorActual.id, cliente_id:cid, producto_id:pid, cantidad_llenas:c, cantidad_vacias:vr, cantidad_defectuosas:df, total:t, metodo_pago:mp, estado:ev, fecha: new Date().toISOString() });
+                await ajustarStockCamioneta(pid,-c,vr,df);
+                await pgPost('movimientos_stock',{ id: uid('mov'), tipo_mov:'venta_app', producto_id:pid, repartidor_id:repartidorActual.id, llenas:-c, vacias:vr, defectuosas:df, referencia_id:ventaId, fecha: new Date().toISOString() });
+                hablar(ev==='Pendiente'?"Fiada registrada":"Venta registrada");
+                document.getElementById('modalConfirmVenta').style.display='none'; document.getElementById('ventaCantidad').value=1; document.getElementById('ventaTotalPantalla').textContent="$0"; document.getElementById('inputClienteNombre').value=''; document.getElementById('inputClienteId').value=''; document.getElementById('ventaTipoCliente').value=''; document.getElementById('ventaModalidad').value='efectivo'; actualizarGarrafas(); cargarStockCamionetaUI(); mostrarToast('¡Venta registrada!');
+            }catch(e){ mostrarToast('Error: '+e.message,'error'); } finally{ b.textContent='Sí, Cobrar'; b.disabled=false; }
+        }
 
-        // ==========================================
-        // VENTAS
-        // ==========================================
-        async function cargarSelectsVentas() { const s=document.getElementById('ventaTipoGarrafa'); s.innerHTML='<option value="">-- Producto --</option>'; productosCamioneta.forEach(p=>s.innerHTML+=`<option value="${p.id}" data-precio="${p.precio_venta}">${p.nombre} - $${p.precio_venta}</option>`); try { const {data:c}=await db.from('clientes').select('*').ilike('tipo','%comercio%').order('nombre'); const dl=document.getElementById('lista-comercios'); dl.innerHTML=''; if(c){clientesCache=c; c.forEach(x=>{const o=document.createElement('option');o.value=x.nombre1+' '+(x.apellido1||'');dl.appendChild(o);});} } catch(e){} }
-        function actualizarGarrafas() { const t=document.getElementById('ventaTipoCliente').value; document.getElementById('inputClienteId').value=''; document.getElementById('inputClienteNombre').value=''; document.getElementById('seccionClienteComercio').style.display=(t==='comercio'||t==='comercio_mides')?'block':'none'; document.getElementById('seccionFlete').style.display=(t==='particular'||t==='particular_mides')?'block':'none'; document.getElementById('alertaGeocerca').style.display='none'; calcularPrecioVenta(); }
-        function seleccionarCliente() { const n=document.getElementById('inputClienteNombre').value; const c=clientesCache.find(x=>(x.nombre1+' '+(x.apellido1||''))===n); document.getElementById('inputClienteId').value=c?c.id:''; document.getElementById('alertaGeocerca').style.display=c?'block':'none'; }
-        function calcularPrecioVenta() { const ps=document.getElementById('ventaTipoGarrafa'), pb=parseFloat(ps.options[ps.selectedIndex]?.dataset.precio||0), c=parseInt(document.getElementById('ventaCantidad').value)||0, m=document.getElementById('ventaModoVenta').value, tc=document.getElementById('ventaTipoCliente').value, mp=document.getElementById('ventaModalidad').value; let sub=0; if(m==='intercambio')sub=pb*c; else if(m==='envase_gas')sub=pb*c*1.5; let fl=0; if((tc==='particular'||tc==='particular_mides')&&m!=='cambio_falla')fl=fleteConfigurado; let rc=0; if(mp==='tarjeta_credito'&&m!=='cambio_falla')rc=RECARGO_TARJETA_CREDITO*c; document.getElementById('ventaTotalOculto').value=sub+fl+rc; document.getElementById('ventaTotalPantalla').textContent="$"+(sub+fl+rc).toLocaleString('es-UY'); }
-        function arreglarCantidad() { const i=document.getElementById('ventaCantidad'); if(!i.value||parseInt(i.value)<1)i.value=1; calcularPrecioVenta(); }
+        async function mostrarPendientes(){
+            const m=document.getElementById('moduloPendientes'), l=document.getElementById('listaPendientes'); l.innerHTML='<p class="text-center text-gray-500 py-4">Cargando...</p>'; m.style.display='block';
+            try{
+                const all=await pgGet('ventas'); const p=all.filter(v=>String(v.repartidor_id)===String(repartidorActual.id)&&v.estado==='Pendiente');
+                if(!p||p.length===0){ l.innerHTML='<p class="text-center text-green-600 font-bold py-4">¡Sin deudas!</p>'; return; }
+                l.innerHTML='';
+                p.forEach(v=>{ const pr=productosCamioneta.find(x=>String(x.id)===String(v.producto_id)), cl=clientesCache.find(x=>String(x.id)===String(v.cliente_id)), d=document.createElement('div'); d.className='bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg shadow-sm mb-3'; d.innerHTML='<p class="font-black">'+(cl?nombreCliente(cl):'Cliente')+' - '+(pr?pr.nombre:'Prod')+'</p><p class="text-xl font-black text-red-700 my-2">$'+num(v.total).toLocaleString('es-UY')+' (x'+v.cantidad_llenas+')</p><select id="pagoPend_'+v.id+'" class="block w-full px-3 py-2 border-2 border-green-300 rounded-lg text-sm font-bold mb-2 bg-green-50"><option value="efectivo">💵 Efectivo</option><option value="transferencia">📱 Transferencia</option><option value="tarjeta_debito">💳 Débito</option><option value="tarjeta_credito">💳 Crédito (+$100)</option></select><button onclick="cobrarPendiente(\''+v.id+'\')" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold btn-action">✅ Cobrar</button>'; l.appendChild(d); });
+            }catch(e){}
+        }
+        function cerrarPendientes(){ document.getElementById('moduloPendientes').style.display='none'; }
+        async function cobrarPendiente(id){
+            try{
+                const ms=document.getElementById('pagoPend_'+id).value;
+                const all=await pgGet('ventas'); const v=all.find(x=>String(x.id)===String(id)); if(!v) return;
+                let total=num(v.total); if(ms==='tarjeta_credito') total+=RECARGO_TARJETA_CREDITO*(parseInt(v.cantidad_llenas)||0);
+                await pgPost('ventas',{ ...v, estado:'Cobrado', metodo_pago:ms, total: total });
+                hablar("Cobro registrado"); mostrarPendientes();
+            }catch(e){ mostrarToast('Error','error'); }
+        }
 
-        function preValidarVenta() { if(!document.getElementById('ventaTipoCliente').value){mostrarToast('Seleccioná cliente','error');return;} if(!document.getElementById('ventaTipoGarrafa').value){mostrarToast('Seleccioná producto','error');return;} const ps=document.getElementById('ventaTipoGarrafa'), pn=ps.options[ps.selectedIndex].text.split(' - ')[0], mt=document.getElementById('ventaModalidad').options[document.getElementById('ventaModalidad').selectedIndex].text, md=document.getElementById('ventaModoVenta').options[document.getElementById('ventaModoVenta').selectedIndex].text, t=parseFloat(document.getElementById('ventaTotalOculto').value)||0; document.getElementById('detalleConfirmVenta').innerHTML=`<p><b>Producto:</b> ${pn} (x${document.getElementById('ventaCantidad').value})</p><p><b>Modo:</b> ${md}</p><p><b>Pago:</b> ${mt}</p><p class="text-xl font-black text-green-700 mt-2">TOTAL: $${t.toLocaleString('es-UY')}</p>`; document.getElementById('modalConfirmVenta').style.display='flex'; }
-        function cancelarVentaModal() { document.getElementById('modalConfirmVenta').style.display='none'; hablar("Cancelada"); }
+        async function mostrarPantallaCierre(){
+            document.getElementById('moduloVentas').style.display='none'; document.getElementById('moduloCierre').style.display='block';
+            try{
+                const all=await pgGet('ventas'); const v=all.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)&&esHoy(x.fecha||x.created_at));
+                let te=0,tt=0,tc=0,td=0,tl=0,tf=0,tg=0,tu=0,tca=0;
+                v.forEach(x=>{ tg+=num(x.total); tu+=parseInt(x.cantidad_llenas)||0; tca+=parseInt(x.cantidad_defectuosas)||0; if(x.estado==='Pendiente'||x.metodo_pago==='fiado') tf+=num(x.total); else{ if(x.metodo_pago==='efectivo') te+=num(x.total); else if(x.metodo_pago==='transferencia') tt+=num(x.total); else if(x.metodo_pago==='tarjeta_credito') tc+=num(x.total); else if(x.metodo_pago==='tarjeta_debito') td+=num(x.total); else if(x.metodo_pago==='pago_local') tl+=num(x.total); } });
+                const vl=num(localStorage.getItem('vuelto_inicio')), ep=num(localStorage.getItem('entregado_parcial')), ae=te+vl-ep;
+                document.getElementById('informeProductos').innerHTML='<div class="flex justify-between"><span>Llenas:</span> <span>'+tu+'</span></div><div class="flex justify-between"><span>Cambios / Fallas:</span> <span id="informeCambio">'+tca+'</span></div>';
+                document.getElementById('informeEfectivo').textContent="$"+te.toLocaleString('es-UY'); document.getElementById('informeTransferencia').textContent="$"+tt.toLocaleString('es-UY'); document.getElementById('informeCredito').textContent="$"+tc.toLocaleString('es-UY'); document.getElementById('informeDebito').textContent="$"+td.toLocaleString('es-UY'); document.getElementById('informeLocal').textContent="$"+tl.toLocaleString('es-UY'); document.getElementById('informeFiado').textContent="$"+tf.toLocaleString('es-UY'); document.getElementById('informeTotalGeneral').textContent="$"+tg.toLocaleString('es-UY'); document.getElementById('informeVuelto').textContent="$"+vl.toLocaleString('es-UY'); document.getElementById('informeEntregadoParcial').textContent="$"+ep.toLocaleString('es-UY'); document.getElementById('informeTotalEntregar').textContent="$"+Math.max(0,ae).toLocaleString('es-UY');
+            }catch(e){}
+        }
+        async function realizarCierreParcial(){
+            const a=parseFloat(document.getElementById('informeTotalEntregar').textContent.replace('$','').replace('.',''))||0;
+            const m=prompt('¿Cuánto entregás?\n(Disponible: $'+a.toLocaleString('es-UY')+')');
+            if(m&&!isNaN(parseFloat(m))&&parseFloat(m)>0){
+                localStorage.setItem('entregado_parcial', (num(localStorage.getItem('entregado_parcial'))+parseFloat(m)).toString());
+                try{ await pgPost('cierres',{ id: uid('cie'), repartidor_id: repartidorActual.id, tipo:'parcial', monto: parseFloat(m), fecha: new Date().toISOString() }); }catch(e){}
+                hablar("Parcial registrada"); mostrarPantallaCierre();
+            }
+        }
+        async function cerrarJornada(){
+            if(!confirm('¿CERRAR JORNADA?')) return;
+            try{ const all=await pgGet('jornadas'); const j=all.find(x=>String(x.repartidor_id)===String(repartidorActual.id)&&x.estado==='abierta'); if(j) await pgPost('jornadas',{ ...j, estado:'cerrada', hora_cierre: new Date().toLocaleTimeString('es-UY') }); }catch(e){}
+            localStorage.removeItem('jornada_activa'); localStorage.removeItem('km_inicio'); localStorage.removeItem('vuelto_inicio'); localStorage.removeItem('entregado_parcial'); detenerSeguimientoGPS(); hablar("Jornada finalizada."); document.getElementById('moduloCierre').style.display='none'; document.getElementById('pantallaTrabajo').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; cargarDatosJornada();
+        }
+        function mostrarPantallaVentas(){ document.getElementById('moduloCierre').style.display='none'; document.getElementById('moduloVentas').style.display='block'; }
 
-        async function registrarVenta() { const b=document.getElementById('btnConfirmarFinal'); b.textContent='Procesando...'; b.disabled=true; try { const pid=document.getElementById('ventaTipoGarrafa').value, c=parseInt(document.getElementById('ventaCantidad').value)||0, m=document.getElementById('ventaModoVenta').value, t=parseFloat(document.getElementById('ventaTotalOculto').value)||0, mp=document.getElementById('ventaModalidad').value, cid=document.getElementById('inputClienteId').value||null; const {data:sc}=await db.from('stock_camioneta').select('llenas').eq('repartidor_id',repartidorActual.id).eq('producto_id',pid).maybeSingle(); if(c>(sc?sc.llenas:0)){mostrarToast('Stock insuficiente','error');return;} let vr=(m==='intercambio')?c:0, df=(m==='cambio_falla')?c:0, ev=(mp==='fiado')?'Pendiente':'Cobrado'; const {data:vd,error:ev2}=await db.from('ventas').insert({origen:'app',tipo_venta:m,repartidor_id:repartidorActual.id,cliente_id:cid,producto_id:pid,cantidad_llenas:c,cantidad_vacias:vr,cantidad_defectuosas:df,total:t,metodo_pago:mp,estado:ev}).select().single(); if(ev2)throw ev2; const {error:es}=await db.rpc('modificar_stock_camioneta',{p_repartidor_id:repartidorActual.id,p_producto_id:pid,p_llenas:-c,p_vacias:vr,p_defectuosas:df}); if(es)throw es; await db.from('movimientos_stock').insert({tipo_mov:'venta_app',producto_id:pid,repartidor_id:repartidorActual.id,llenas:-c,vacias:vr,defectuosas:df,referencia_id:vd.id}); hablar(ev==='Pendiente'?"Fiada registrada":"Venta registrada"); document.getElementById('modalConfirmVenta').style.display='none'; document.getElementById('ventaCantidad').value=1; document.getElementById('ventaTotalPantalla').textContent="$0"; document.getElementById('inputClienteNombre').value=''; document.getElementById('inputClienteId').value=''; document.getElementById('ventaTipoCliente').value=''; document.getElementById('ventaModalidad').value='efectivo'; actualizarGarrafas(); cargarStockCamionetaUI(); mostrarToast('¡Venta registrada!'); } catch(e){mostrarToast('Error: '+e.message,'error');} finally{b.textContent='Sí, Cobrar';b.disabled=false;} }
+        // ENCONTRADO - sin mapa, usa GPS que ya tenés
+        function abrirEncontrado(){ document.getElementById('modalEncontrado').style.display='flex'; }
+        function cerrarEncontrado(){ document.getElementById('modalEncontrado').style.display='none'; }
+        async function registrarEncontrado(){
+            const nombre=document.getElementById('encNombre').value.trim(); const telefono=document.getElementById('encTelefono').value.trim();
+            if(!nombre){ mostrarToast('Poné el nombre','error'); return; }
+            if(!lastGpsPosition||!lastGpsPosition.lat){ mostrarToast('Sin ubicación todavía, esperá unos segundos','error'); return; }
+            try{ await pgPost('puntos_ruta',{ id: uid('pr'), nombre: nombre, telefono: telefono, latitud: lastGpsPosition.lat, longitud: lastGpsPosition.lng, tipo:'encontrado', fecha: new Date().toISOString() }); hablar("Encontrado guardado"); cerrarEncontrado(); document.getElementById('encNombre').value=''; document.getElementById('encTelefono').value=''; mostrarToast('Encontrado guardado, se ve en la web'); }catch(e){ mostrarToast('Error: '+e.message,'error'); }
+        }
 
-        // ==========================================
-        // PENDIENTES
-        // ==========================================
-        async function mostrarPendientes() { const m=document.getElementById('moduloPendientes'), l=document.getElementById('listaPendientes'); l.innerHTML='<p class="text-center text-gray-500 py-4">Cargando...</p>'; m.style.display='block'; try { const {data:p}=await db.from('ventas').select('*').eq('repartidor_id',repartidorActual.id).eq('estado','Pendiente'); if(!p||p.length===0){l.innerHTML='<p class="text-center text-green-600 font-bold py-4">¡Sin deudas!</p>';return;} l.innerHTML=''; p.forEach(v=>{ const pr=productosCamioneta.find(x=>x.id===v.producto_id), cl=clientesCache.find(x=>x.id===v.cliente_id), d=document.createElement('div'); d.className='bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg shadow-sm mb-3'; d.innerHTML=`<p class="font-black">${cl?cl.nombre1+' '+(cl.apellido1||''):'Cliente'} - ${pr?pr.nombre:'Prod'}</p><p class="text-xl font-black text-red-700 my-2">$${v.total.toLocaleString('es-UY')} (x${v.cantidad_llenas})</p><select id="pagoPend_${v.id}" class="block w-full px-3 py-2 border-2 border-green-300 rounded-lg text-sm font-bold mb-2 bg-green-50"><option value="efectivo">💵 Efectivo</option><option value="transferencia">📱 Transferencia</option><option value="tarjeta_debito">💳 Débito</option><option value="tarjeta_credito">💳 Crédito (+$100)</option></select><button onclick="cobrarPendiente('${v.id}')" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold btn-action">✅ Cobrar</button>`; l.appendChild(d); }); } catch(e){} }
-        function cerrarPendientes() { document.getElementById('moduloPendientes').style.display='none'; }
-        async function cobrarPendiente(id) { try { const ms=document.getElementById(`pagoPend_${id}`).value; let ud={estado:'Cobrado',metodo_pago:ms}; if(ms==='tarjeta_credito'){const {data:v}=await db.from('ventas').select('total, cantidad_llenas').eq('id',id).single(); if(v)ud.total=v.total+(RECARGO_TARJETA_CREDITO*v.cantidad_llenas);} const {error}=await db.from('ventas').update(ud).eq('id',id); if(error)throw error; hablar("Cobro registrado"); mostrarPendientes(); } catch(e){mostrarToast('Error','error');} }
-
-        // ==========================================
-        // CAJA Y CIERRE
-        // ==========================================
-        async function mostrarPantallaCierre() { document.getElementById('moduloVentas').style.display='none'; document.getElementById('moduloCierre').style.display='block'; try { const h=new Date().toISOString().split('T')[0], {data:v}=await db.from('ventas').select('*').eq('repartidor_id',repartidorActual.id).gte('created_at',h); let te=0,tt=0,tc=0,td=0,tl=0,tf=0,tg=0,tu=0,tca=0; v.forEach(x=>{tg+=x.total;tu+=x.cantidad_llenas;tca+=x.cantidad_defectuosas; if(x.estado==='Pendiente'||x.metodo_pago==='fiado')tf+=x.total; else{if(x.metodo_pago==='efectivo')te+=x.total;else if(x.metodo_pago==='transferencia')tt+=x.total;else if(x.metodo_pago==='tarjeta_credito')tc+=x.total;else if(x.metodo_pago==='tarjeta_debito')td+=x.total;else if(x.metodo_pago==='pago_local')tl+=x.total;}}); const vl=parseFloat(localStorage.getItem('vuelto_inicio'))||0, ep=parseFloat(localStorage.getItem('entregado_parcial'))||0, ae=te+vl-ep; document.getElementById('informeProductos').innerHTML=`<div class="flex justify-between"><span>Llenas:</span> <span>${tu}</span></div>`; document.getElementById('informeEfectivo').textContent="$"+te.toLocaleString('es-UY'); document.getElementById('informeTransferencia').textContent="$"+tt.toLocaleString('es-UY'); document.getElementById('informeCredito').textContent="$"+tc.toLocaleString('es-UY'); document.getElementById('informeDebito').textContent="$"+td.toLocaleString('es-UY'); document.getElementById('informeLocal').textContent="$"+tl.toLocaleString('es-UY'); document.getElementById('informeFiado').textContent="$"+tf.toLocaleString('es-UY'); document.getElementById('informeCambio').textContent=tca; document.getElementById('informeTotalGeneral').textContent="$"+tg.toLocaleString('es-UY'); document.getElementById('informeVuelto').textContent="$"+vl.toLocaleString('es-UY'); document.getElementById('informeEntregadoParcial').textContent="$"+ep.toLocaleString('es-UY'); document.getElementById('informeTotalEntregar').textContent="$"+Math.max(0,ae).toLocaleString('es-UY'); } catch(e){} }
-        function realizarCierreParcial() { const a=parseFloat(document.getElementById('informeTotalEntregar').textContent.replace('$','').replace('.',''))||0; const m=prompt(`¿Cuánto entregás?\n(Disponible: $${a.toLocaleString('es-UY')})`); if(m&&!isNaN(parseFloat(m))&&parseFloat(m)>0){ localStorage.setItem('entregado_parcial',((parseFloat(localStorage.getItem('entregado_parcial'))||0)+parseFloat(m)).toString()); говорить("Parcial registrada"); mostrarPantallaCierre(); } }
-        function cerrarJornada() { if(!confirm('¿CERRAR JORNADA?'))return; localStorage.removeItem('jornada_activa'); localStorage.removeItem('km_inicio'); localStorage.removeItem('vuelto_inicio'); localStorage.removeItem('entregado_parcial'); detenerSeguimientoGPS(); hablar("Jornada finalizada."); document.getElementById('moduloCierre').style.display='none'; document.getElementById('pantallaTrabajo').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; cargarDatosJornada(); }
-        function mostrarPantallaVentas() { document.getElementById('moduloCierre').style.display='none'; document.getElementById('moduloVentas').style.display='block'; }
-
-        // ==========================================
-        // GPS Y PUNTOS DE RUTA
-        // ==========================================
-        function calcularDistancia(lat1, lon1, lat2, lon2) { const R=6371e3, p1=lat1*Math.PI/180, p2=lat2*Math.PI/180, dp=(lat2-lat1)*Math.PI/180, dl=(lon2-lon1)*Math.PI/180; const a=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2); return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
-
-        async function cargarPuntosRutaApp() { try { const {data}=await db.from('puntos_ruta').select('*'); if(data)puntosRutaCache=data; } catch(e){console.error(e)} }
-
-        function iniciarSeguimientoGPS() {
-            if(!navigator.geolocation)return; if(gpsWatchId!==null)return;
+        // GPS - lógica intacta, solo cambió la base a Postgres
+        function calcularDistancia(lat1, lon1, lat2, lon2){ const R=6371e3, p1=lat1*Math.PI/180, p2=lat2*Math.PI/180, dp=(lat2-lat1)*Math.PI/180, dl=(lon2-lon1)*Math.PI/180; const a=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2); return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
+        async function cargarPuntosRutaApp(){ try{ const data=await pgGet('puntos_ruta'); if(data) puntosRutaCache=data; }catch(e){ console.error(e); } }
+        function iniciarSeguimientoGPS(){
+            if(!navigator.geolocation) return; if(gpsWatchId!==null) return;
             lastMovementTime=Date.now(); cargarPuntosRutaApp();
-            if(!stopCheckInterval) stopCheckInterval=setInterval(verificarParadaGPS, 15000);
+            if(!stopCheckInterval) stopCheckInterval=setInterval(verificarParadaGPS,15000);
             gpsWatchId=navigator.geolocation.watchPosition(async(pos)=>{
                 const lat=pos.coords.latitude, lng=pos.coords.longitude, speed=pos.coords.speed||0;
-                if(!lastGpsPosition)lastGpsPosition={}; lastGpsPosition.lat=lat; lastGpsPosition.lng=lng;
+                if(!lastGpsPosition) lastGpsPosition={}; lastGpsPosition.lat=lat; lastGpsPosition.lng=lng;
                 const now=Date.now();
-                if(!lastGpsPosition.lastSent||(now-lastGpsPosition.lastSent)>15000){ try{ await db.from('ubicaciones').insert({repartidor_id:repartidorActual.id,latitud:lat,longitud:lng,velocidad:speed,en_movimiento:speed>0.5,precision_gps:pos.coords.accuracy,timestamp:new Date().toISOString()}); lastGpsPosition.lastSent=now; }catch(e){} }
-
-                // Alerta de proximidad (10 METROS)
-                if(speed > 1) { 
-                    for(const pt of puntosRutaCache) {
-                        if(!puntosAlertadosHoy.has(pt.id)) {
-                            const dist = calcularDistancia(lat, lng, pt.latitud, pt.longitud);
-                            if(dist <= 10) { 
-                                mostrarToast(`📍 ¡No te olvides de parar y vender en ${pt.nombre}!`, 'info');
-                                hablar("Atención, punto de venta cercano");
-                                puntosAlertadosHoy.add(pt.id);
-                            }
-                        }
-                    }
-                }
-
-                if(speed>0.5){lastMovementTime=Date.now();}
-            }, (err)=>console.error("GPS Err:",err.message), {enableHighAccuracy:true,maximumAge:10000,timeout:15000});
+                if(!lastGpsPosition.lastSent||(now-lastGpsPosition.lastSent)>15000){ try{ await pgPost('gps_locations',{ id: uid('gps'), repartidor_id:repartidorActual.id, lat:lat, lng:lng, latitud:lat, longitud:lng, velocidad:speed, fecha: new Date().toISOString() }); lastGpsPosition.lastSent=now; }catch(e){} }
+                if(speed>1){ for(const pt of puntosRutaCache){ if(!puntosAlertadosHoy.has(pt.id)){ const dist=calcularDistancia(lat,lng,num(pt.latitud),num(pt.longitud)); if(dist<=10){ mostrarToast('📍 ¡No te olvides de parar y vender en '+pt.nombre+'!', 'info'); hablar("Atención, punto de venta cercano"); puntosAlertadosHoy.add(pt.id); } } } }
+                if(speed>0.5){ lastMovementTime=Date.now(); }
+            },(err)=>console.error("GPS Err:",err.message),{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
         }
-
-        function verificarParadaGPS() {
-            if(!lastGpsPosition||!lastGpsPosition.lat)return;
+        function verificarParadaGPS(){
+            if(!lastGpsPosition||!lastGpsPosition.lat) return;
             const timeStopped=Date.now()-lastMovementTime;
-
-            // Buscar si estamos cerca de un punto (10 METROS)
-            let puntoCercano = null;
-            for(const pt of puntosRutaCache) {
-                const dist = calcularDistancia(lastGpsPosition.lat, lastGpsPosition.lng, pt.latitud, pt.longitud);
-                if(dist <= 10) { puntoCercano = pt; break; }
-            }
-
-            // Si estamos parados más de 1 min cerca de un punto y no preguntamos hoy aún
-            if(timeStopped >= 60000 && puntoCercano && !puntosPreguntadosHoy.has(puntoCercano.id)) {
-                puntosPreguntadosHoy.add(puntoCercano.id);
-                puntoActualPregunta = puntoCercano;
-                document.getElementById('textoPreguntaGPS').textContent = `¿Vendiste en ${puntoCercano.nombre}?`;
-                document.getElementById('modalPreguntaGPS').style.display = 'flex';
-                hablar("¿Vendiste aquí?");
-            } 
-            // Si estamos parados más de 2 min en cualquier lado
-            else if (timeStopped >= 120000 && !puntoCercano && !puntosPreguntadosHoy.has('generic_'+lastGpsPosition.lat.toFixed(3))) {
-                puntosPreguntadosHoy.add('generic_'+lastGpsPosition.lat.toFixed(3)); 
-                puntoActualPregunta = null;
-                document.getElementById('textoPreguntaGPS').textContent = `¿Realizaste una venta aquí?`;
-                document.getElementById('modalPreguntaGPS').style.display = 'flex';
-                hablar("¿Vendiste aquí?");
-            }
+            let puntoCercano=null;
+            for(const pt of puntosRutaCache){ const dist=calcularDistancia(lastGpsPosition.lat,lastGpsPosition.lng,num(pt.latitud),num(pt.longitud)); if(dist<=10){ puntoCercano=pt; break; } }
+            if(timeStopped>=60000&&puntoCercano&&!puntosPreguntadosHoy.has(puntoCercano.id)){ puntosPreguntadosHoy.add(puntoCercano.id); puntoActualPregunta=puntoCercano; document.getElementById('textoPreguntaGPS').textContent='¿Vendiste en '+puntoCercano.nombre+'?'; document.getElementById('modalPreguntaGPS').style.display='flex'; hablar("¿Vendiste aquí?"); }
+            else if(timeStopped>=120000&&!puntoCercano&&!puntosPreguntadosHoy.has('generic_'+lastGpsPosition.lat.toFixed(3))){ puntosPreguntadosHoy.add('generic_'+lastGpsPosition.lat.toFixed(3)); puntoActualPregunta=null; document.getElementById('textoPreguntaGPS').textContent='¿Realizaste una venta aquí?'; document.getElementById('modalPreguntaGPS').style.display='flex'; hablar("¿Vendiste aquí?"); }
         }
-
-        async function respuestaGPSSi() {
-            document.getElementById('modalPreguntaGPS').style.display = 'none';
-            mostrarPantallaVentas(); // Abre el módulo de ventas
-        }
-
-        async function respuestaGPSNo() {
-            document.getElementById('modalPreguntaGPS').style.display = 'none';
-            if(puntoActualPregunta) {
-                try { await db.from('puntos_ruta').insert({ nombre: "🛑 Parada sin venta: " + puntoActualPregunta.nombre, latitud: puntoActualPregunta.latitud, longitud: puntoActualPregunta.longitud }); } catch(e){}
-            } else if(lastGpsPosition) {
-                try { await db.from('puntos_ruta').insert({ nombre: "🛑 Parada sin venta (Ruta)", latitud: lastGpsPosition.lat, longitud: lastGpsPosition.lng }); } catch(e){}
-            }
+        async function respuestaGPSSi(){ document.getElementById('modalPreguntaGPS').style.display='none'; mostrarPantallaVentas(); }
+        async function respuestaGPSNo(){
+            document.getElementById('modalPreguntaGPS').style.display='none';
+            if(puntoActualPregunta){ try{ await pgPost('puntos_ruta',{ id: uid('pr'), nombre:"🛑 Parada sin venta: "+puntoActualPregunta.nombre, latitud:puntoActualPregunta.latitud, longitud:puntoActualPregunta.longitud, tipo:'parada_sin_venta', fecha: new Date().toISOString() }); }catch(e){} }
+            else if(lastGpsPosition){ try{ await pgPost('puntos_ruta',{ id: uid('pr'), nombre:"🛑 Parada sin venta (Ruta)", latitud:lastGpsPosition.lat, longitud:lastGpsPosition.lng, tipo:'parada_sin_venta', fecha: new Date().toISOString() }); }catch(e){} }
             mostrarToast("Parada registrada. No se volverá a preguntar.", "info");
         }
-
-        function detenerSeguimientoGPS() { if(gpsWatchId!==null){navigator.geolocation.clearWatch(gpsWatchId);gpsWatchId=null;} if(stopCheckInterval!==null){clearInterval(stopCheckInterval);stopCheckInterval=null;} lastGpsPosition=null; puntosAlertadosHoy.clear(); puntosPreguntadosHoy.clear(); }
+        function detenerSeguimientoGPS(){ if(gpsWatchId!==null){ navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId=null; } if(stopCheckInterval!==null){ clearInterval(stopCheckInterval); stopCheckInterval=null; } lastGpsPosition=null; puntosAlertadosHoy.clear(); puntosPreguntadosHoy.clear(); }
     </script>
 </body>
 </html>
