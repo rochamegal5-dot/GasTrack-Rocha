@@ -1,13 +1,14 @@
 package com.gastrack.rocha
 
-import android.Manifest
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import 【entity-android¦canonical_name=Android】.Manifest
+import 【entity-android¦canonical_name=Android】.content.Context
+import 【entity-android¦canonical_name=Android】.content.Intent
+import 【entity-android¦canonical_name=Android】.content.pm.PackageManager
+import 【entity-android¦canonical_name=Android】.os.Build
+import 【entity-android¦canonical_name=Android】.os.Bundle
+import 【entity-android¦canonical_name=Android】.webkit.JavascriptInterface
+import 【entity-android¦canonical_name=Android】.webkit.WebView
+import 【entity-android¦canonical_name=Android】.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,7 +21,6 @@ import androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
 
-    // Antonio = "7" | Jose = "8" - SON TEXTO
     private var repartidorSeleccionado by mutableStateOf("7")
     private var estaRastreando by mutableStateOf(false)
 
@@ -35,6 +35,24 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { _ -> }
 
+    // 👇 PUENTE: la App Gas llama a esto con Javascript
+    inner class PuenteGPS {
+        @JavascriptInterface
+        fun startTracking(repartidorId: String) {
+            runOnUiThread { startTrackingNativo(repartidorId) }
+        }
+
+        @JavascriptInterface
+        fun stopTracking() {
+            runOnUiThread { stopTrackingNativo() }
+        }
+
+        @JavascriptInterface
+        fun getRepartidor(): String {
+            return repartidorSeleccionado
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -46,7 +64,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                // UNA SOLA APP: GasTrack Rocha = App Gas adentro
                 AndroidView(
                     factory = { ctx ->
                         WebView(ctx).apply {
@@ -54,8 +71,9 @@ class MainActivity : ComponentActivity() {
                             settings.domStorageEnabled = true
                             settings.databaseEnabled = true
                             settings.javaScriptCanOpenWindowsAutomatically = true
+                            // 👇 Conecta la web con el celular
+                            addJavascriptInterface(PuenteGPS(), "【entity-AndroidGPS¦canonical_name=Android】")
                             webViewClient = WebViewClient()
-                            // App Gas que ya arreglamos - gris claro, números negros
                             loadUrl("https://megalweb.vercel.app/app-gas")
                         }
                     },
@@ -64,9 +82,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Si ya estaba rastreando antes, sigue rastreando
         if (estaRastreando) {
-            startTracking(repartidorSeleccionado)
+            startTrackingNativo(repartidorSeleccionado)
         }
     }
 
@@ -100,8 +117,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // GPS - IGUAL QUE ANTES, NO SE TOCA
-    private fun startTracking(repartidorId: String) {
+    // GPS - IGUAL QUE ANTES, NO SE TOCA EL SERVICIO
+    private fun startTrackingNativo(repartidorId: String) {
+        repartidorSeleccionado = repartidorId
         val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
         prefs.edit()
             .putString("repartidor_id", repartidorId)
@@ -120,7 +138,7 @@ class MainActivity : ComponentActivity() {
         estaRastreando = true
     }
 
-    private fun stopTracking() {
+    private fun stopTrackingNativo() {
         val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("was_running", false).apply()
 
