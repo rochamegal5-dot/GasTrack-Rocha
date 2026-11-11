@@ -21,11 +21,19 @@ data class UbicacionInsert(
     val en_movimiento: Boolean = velocidad > 3,
     val fecha_local: String = hoyUY(),
     val hoy: String = fecha_local,
-    val timestamp: String = fecha_local
+    // CORREGIDO: timestamp con hora, no solo fecha
+    val timestamp: String = ahoraUY()
 ) {
     companion object {
         fun hoyUY(): String {
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale("es", "UY"))
+            sdf.timeZone = TimeZone.getTimeZone("America/Montevideo")
+            return sdf.format(Date())
+        }
+
+        // NUEVO: fecha + hora para el timestamp
+        fun ahoraUY(): String {
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale("es", "UY"))
             sdf.timeZone = TimeZone.getTimeZone("America/Montevideo")
             return sdf.format(Date())
         }
@@ -53,7 +61,7 @@ data class UbicacionInsert(
                 en_movimiento = velocidadKmh > 3,
                 fecha_local = fecha,
                 hoy = fecha,
-                timestamp = fecha
+                timestamp = ahoraUY()
             )
         }
     }
