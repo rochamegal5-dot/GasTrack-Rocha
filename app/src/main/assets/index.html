@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -11,32 +11,13 @@
         .btn-action:active { transform: scale(0.95); }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
         .toast-msg { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 200; padding: 12px 24px; border-radius: 8px; color: white; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: fadeInOut 4s forwards; max-width: 90%; text-align: center; }
-        /* FIX - cantidades siempre blancas con numeros negros */
-        input[type="number"],
-        input[type="text"],
-        input,
-        select {
-          background: #ffffff !important;
-          color: #000000 !important;
-          -webkit-text-fill-color: #000000 !important;
+        input[type="number"], input[type="text"], input, select {
+          background: #ffffff !important; color: #000000 !important; -webkit-text-fill-color: #000000 !important;
         }
-        input::placeholder {
-          color: #6b7280 !important;
-          -webkit-text-fill-color: #6b7280 !important;
-        }
-        #ventaCantidad,
-        #inputKmInicio,
-        #inputVuelto,
-        #encTelefono,
-        #encNombre,
-        #inputClienteNombre,
-        [id^="stockInicial_"],
-        [id^="recVac_"],
-        [id^="recLlen_"] {
-          background: #ffffff !important;
-          color: #000000 !important;
-          font-weight: 900 !important;
-          -webkit-text-fill-color: #000000 !important;
+        input::placeholder { color: #6b7280 !important; -webkit-text-fill-color: #6b7280 !important; }
+        #ventaCantidad, #inputKmInicio, #inputVuelto, #encTelefono, #encNombre, #inputClienteNombre,
+        [id^="stockInicial_"], [id^="recVac_"], [id^="recLlen_"] {
+          background: #ffffff !important; color: #000000 !important; font-weight: 900 !important; -webkit-text-fill-color: #000000 !important;
         }
         select option { background:#ffffff !important; color:#000000 !important; }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translateX(-50%) translateY(-20px); } 15% { opacity: 1; transform: translateX(-50%) translateY(0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
@@ -50,6 +31,7 @@
             <button onclick="iniciarSesion()" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer btn-action">Ingresar</button>
         </div>
     </div>
+
     <div id="pantallaInicioJornada" style="display: none;" class="min-h-screen flex items-center justify-center bg-yellow-50 p-6">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm">
             <h2 class="text-2xl font-black text-center text-yellow-700 mb-4">Iniciar Jornada</h2>
@@ -63,7 +45,8 @@
             <button onclick="registrarInicioJornada()" class="w-full bg-yellow-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer btn-action">EMPEZAR EL DIA</button>
         </div>
     </div>
-     <div id="pantallaTrabajo" style="display: none;" class="max-w-lg mx-auto">
+
+    <div id="pantallaTrabajo" style="display: none;" class="max-w-lg mx-auto">
         <div class="bg-blue-900 text-white p-3 sticky top-0 z-50 shadow-lg flex justify-between items-center">
             <h2 class="text-sm font-bold truncate" id="nombreRepartidorTop">Repartidor</h2>
             <div class="flex gap-2">
@@ -72,7 +55,8 @@
                 <button onclick="mostrarPantallaCierre()" class="bg-orange-500 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer shadow btn-action">Caja</button>
             </div>
         </div>
-        <div id="" class="p-4 space-y-4">
+
+        <div id="moduloVentas" class="p-4 space-y-4">
             <div class="bg-indigo-100 p-3 rounded-xl shadow-sm border-l-4 border-indigo-500">
                 <div class="flex justify-between items-center mb-2">
                     <p class="text-xs font-bold text-indigo-800">STOCK EN CAMIONETA</p>
@@ -80,123 +64,116 @@
                 </div>
                 <div id="stockGridUI" class="grid grid-cols-3 gap-2"></div>
             </div>
-            
-        <div id="moduloVentas" class="p-4 space-y-4">
-    <div class="bg-indigo-100 p-3 rounded-xl shadow-sm border-l-4 border-indigo-500">
-        <div class="flex justify-between items-center mb-2">
-            <p class="text-xs font-bold text-indigo-800">STOCK EN CAMIONETA</p>
-            <button onclick="abrirRecarga()" class="bg-indigo-600 text-white px-3 py-1 rounded-lg text-xs font-bold cursor-pointer btn-action">+ Recarga</button>
-        </div>
-        <div id="stockGridUI" class="grid grid-cols-3 gap-2"></div>
-    </div>
-    <div id="seccionRecarga" style="display: none;" class="bg-blue-50 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
-        <h3 class="font-bold text-blue-800 mb-2">Carga desde Deposito</h3>
-        <p id="ultimaRecargaHora" class="text-xs text-blue-600 text-center font-bold mb-2"></p>
-        <div id="contenedorRecarga" class="grid grid-cols-3 gap-2 mb-3"></div>
-        <div class="flex gap-2">
-            <button onclick="registrarRecarga()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold cursor-pointer btn-action">Confirmar</button>
-            <button onclick="cerrarRecarga()" class="flex-1 bg-gray-400 text-white py-2 rounded-lg font-bold cursor-pointer btn-action">Cancelar</button>
-        </div>
-    </div>
-    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
-        <h3 class="font-bold text-gray-800 mb-3 text-lg">Registrar Venta</h3>
-        <div class="space-y-3">
-            <select id="ventaTipoCliente" onchange="actualizarGarrafas()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold bg-blue-50 cursor-pointer">
-                <option value="">-- Tipo de Cliente --</option><option value="particular">Particular</option><option value="particular_mides">Particular Mides</option><option value="comercio">Comercio</option><option value="comercio_especial">Comercio Especial</option><option value="comercio_mides">Comercio Mides</option>
-            </select>
-            <div id="seccionClienteComercio" style="display: none;">
-                <div id="alertaGeocerca" style="display: none;" class="p-2 bg-green-100 border border-green-400 text-green-800 rounded-lg text-xs font-bold text-center mb-2">📍 Venta automática en este local</div>
-                <input type="text" id="inputClienteNombre" list="lista-comercios" placeholder="Escriba nombre del comercio..." class="block w-full px-3 py-3 border-2 border-purple-300 rounded-lg text-sm font-bold bg-purple-50 cursor-text" oninput="seleccionarCliente()">
-                <datalist id="lista-comercios"></datalist><input type="hidden" id="inputClienteId" value="">
-                <div id="avisoBloqueoComercio" style="display:none;" class="p-2 bg-red-100 border border-red-400 text-red-800 rounded-lg text-xs font-bold text-center mt-2">⛔️ Este punto NO está marcado como Comercio. Solo podés vender como Particular.</div>
+            <div id="seccionRecarga" style="display: none;" class="bg-blue-50 p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <h3 class="font-bold text-blue-800 mb-2">Carga desde Deposito</h3>
+                <p id="ultimaRecargaHora" class="text-xs text-blue-600 text-center font-bold mb-2"></p>
+                <div id="contenedorRecarga" class="grid grid-cols-3 gap-2 mb-3"></div>
+                <div class="flex gap-2">
+                    <button onclick="registrarRecarga()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold cursor-pointer btn-action">Confirmar</button>
+                    <button onclick="cerrarRecarga()" class="flex-1 bg-gray-400 text-white py-2 rounded-lg font-bold cursor-pointer btn-action">Cancelar</button>
+                </div>
             </div>
-            <div id="seccionFlete" style="display: none;" class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400 text-center">
-                <p class="text-xs font-bold text-blue-800">🚚 Incluye Flete de Reparto - Solo Particular</p><p class="text-2xl font-black text-blue-700" id="textoFleteAuto">$0</p>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
+                <h3 class="font-bold text-gray-800 mb-3 text-lg">Registrar Venta</h3>
+                <div class="space-y-3">
+                    <select id="ventaTipoCliente" onchange="actualizarGarrafas()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold bg-blue-50 cursor-pointer">
+                        <option value="">-- Tipo de Cliente --</option><option value="particular">Particular</option><option value="particular_mides">Particular Mides</option><option value="comercio">Comercio</option><option value="comercio_especial">Comercio Especial</option><option value="comercio_mides">Comercio Mides</option>
+                    </select>
+                    <div id="seccionClienteComercio" style="display: none;">
+                        <div id="alertaGeocerca" style="display: none;" class="p-2 bg-green-100 border border-green-400 text-green-800 rounded-lg text-xs font-bold text-center mb-2">📍 Venta automática en este local</div>
+                        <input type="text" id="inputClienteNombre" list="lista-comercios" placeholder="Escriba nombre del comercio..." class="block w-full px-3 py-3 border-2 border-purple-300 rounded-lg text-sm font-bold bg-purple-50 cursor-text" oninput="seleccionarCliente()">
+                        <datalist id="lista-comercios"></datalist><input type="hidden" id="inputClienteId" value="">
+                        <div id="avisoBloqueoComercio" style="display:none;" class="p-2 bg-red-100 border border-red-400 text-red-800 rounded-lg text-xs font-bold text-center mt-2">⛔ Este punto NO está marcado como Comercio. Solo podés vender como Particular.</div>
+                    </div>
+                    <div id="seccionFlete" style="display: none;" class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400 text-center">
+                        <p class="text-xs font-bold text-blue-800">🚚 Incluye Flete de Reparto - Solo Particular</p><p class="text-2xl font-black text-blue-700" id="textoFleteAuto">$0</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <select id="ventaTipoGarrafa" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer"><option value="">-- Producto --</option></select>
+                        <input type="number" id="ventaCantidad" value="1" min="1" step="1" oninput="calcularPrecioVenta()" onblur="arreglarCantidad()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm text-center font-black">
+                    </div>
+                    <select id="ventaModoVenta" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold cursor-pointer bg-green-50">
+                        <option value="intercambio">🔄 Solo Gas (trae envase) - Llena -1 / Vacía +1</option><option value="envase_gas">🛒 Completa (Envase + Gas) - Llena -1</option><option value="cambio_falla">🔄 Cambio por Falla ($0) - Llena -1 / Para cambio +1</option>
+                    </select>
+                    <div class="bg-gray-100 p-4 rounded-lg border-2 border-dashed border-gray-300 text-center">
+                        <p class="text-xs text-gray-500 font-bold mb-1">TOTAL A COBRAR</p><p class="text-4xl font-black text-green-700" id="ventaTotalPantalla">$0</p>
+                        <p id="textoFleteEnTotal" class="text-xs font-bold text-blue-700 mt-1"></p>
+                    </div>
+                    <input type="hidden" id="ventaTotalOculto" value="0">
+                    <select id="ventaModalidad" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer">
+                        <option value="efectivo">💵 Efectivo</option><option value="transferencia">📱 Transferencia</option><option value="tarjeta_debito">💳 Tarjeta Débito</option><option value="tarjeta_credito">💳 Tarjeta Crédito (+$100)</option><option value="pago_local">🏦 Pago en el local</option><option value="fiado">📝 Fiado (Cobrar después)</option>
+                    </select>
+                    <button onclick="preValidarVenta()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer shadow-lg btn-action">Confirmar Venta</button>
+                </div>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <select id="ventaTipoGarrafa" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer"><option value="">-- Producto --</option></select>
-                <input type="number" id="ventaCantidad" value="1" min="1" step="1" oninput="calcularPrecioVenta()" onblur="arreglarCantidad()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm text-center font-black">
+        </div>
+
+        <div id="moduloCierre" style="display: none;" class="p-4 space-y-4">
+            <button onclick="mostrarPantallaVentas()" class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 flex items-center justify-center btn-action"><span class="mr-2">⬅</span> Volver a Ventas</button>
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
+                <h3 class="font-bold text-gray-800 mb-3 text-lg">Cierre y Entrega del Día</h3>
+                <div class="bg-orange-50 p-4 rounded-xl mb-3 text-sm space-y-2">
+                    <p class="font-black text-gray-700 mb-2">Productos Entregados:</p><div id="informeProductos" class="font-bold text-orange-900 space-y-1"></div><hr class="border-orange-300 my-2">
+                    <p class="font-black text-gray-700 mb-2">Dinero Obtenido:</p>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Efectivo:</span> <span id="informeEfectivo">$0</span></div>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Transferencia:</span> <span id="informeTransferencia">$0</span></div>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta Crédito:</span> <span id="informeCredito">$0</span></div>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta Débito:</span> <span id="informeDebito">$0</span></div>
+                    <div class="flex justify-between font-bold text-orange-900"><span>Pago en el local:</span> <span id="informeLocal">$0</span></div><hr class="border-orange-300 my-2">
+                    <p class="font-black text-yellow-700 mb-2">⚠ Ventas Fiadas:</p><div class="flex justify-between font-bold text-yellow-800"><span>Total Fiado:</span> <span id="informeFiado" class="text-red-600">$0</span></div><hr class="border-orange-300 my-2">
+                    <div class="flex justify-between font-black text-orange-900 text-lg mt-1"><span>TOTAL VENDIDO:</span> <span id="informeTotalGeneral">$0</span></div><hr class="border-orange-300 my-2">
+                    <div class="flex justify-between font-bold text-green-700"><span>Vuelto Inicial:</span> <span id="informeVuelto">$0</span></div>
+                    <div class="flex justify-between font-bold text-red-700"><span>Entregado Parcial:</span> <span id="informeEntregadoParcial">$0</span></div>
+                    <div class="flex justify-between font-black text-green-700 text-lg mt-1"><span>A ENTREGAR (Efectivo):</span> <span id="informeTotalEntregar">$0</span></div>
+                </div>
+                <button onclick="realizarCierreParcial('parcial_mediodia')" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 btn-action">☀ Entregar Parcial Mediodía</button>
+                <button onclick="realizarCierreParcial('parcial_tarde')" class="w-full bg-amber-600 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 btn-action">🌇 Entregar Parcial Tarde</button>
+                <button onclick="cerrarJornada()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer btn-action">🔒 CERRAR JORNADA FINAL</button>
             </div>
-            <select id="ventaModoVenta" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm font-bold cursor-pointer bg-green-50">
-                <option value="intercambio">🔄 Solo Gas (trae envase) - Llena -1 / Vacía +1</option><option value="envase_gas">🛒 Completa (Envase + Gas) - Llena -1</option><option value="cambio_falla">🔄 Cambio por Falla ($0) - Llena -1 / Para cambio +1</option>
-            </select>
-            <div class="bg-gray-100 p-4 rounded-lg border-2 border-dashed border-gray-300 text-center">
-                <p class="text-xs text-gray-500 font-bold mb-1">TOTAL A COBRAR</p><p class="text-4xl font-black text-green-700" id="ventaTotalPantalla">$0</p>
-                <p id="textoFleteEnTotal" class="text-xs font-bold text-blue-700 mt-1"></p>
+        </div>
+    </div>
+
+    <div id="modalConfirmVenta" style="display: none;" class="modal-overlay">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
+            <h3 class="text-xl font-black text-gray-800">¿Confirmar Venta?</h3>
+            <div id="detalleConfirmVenta" class="text-left bg-gray-50 p-4 rounded-lg text-sm space-y-2 border border-gray-200"></div>
+            <div class="flex gap-3">
+                <button onclick="cancelarVentaModal()" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-xl font-bold text-lg cursor-pointer btn-action">Cancelar</button>
+                <button onclick="registrarVenta()" id="btnConfirmarFinal" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer btn-action">Sí, Cobrar</button>
             </div>
-            <input type="hidden" id="ventaTotalOculto" value="0">
-            <select id="ventaModalidad" onchange="calcularPrecioVenta()" class="block w-full px-3 py-3 border-2 border-gray-200 rounded-lg text-sm cursor-pointer">
-                <option value="efectivo">💵 Efectivo</option><option value="transferencia">📱 Transferencia</option><option value="tarjeta_debito">💳 Tarjeta Débito</option><option value="tarjeta_credito">💳 Tarjeta Crédito (+$100)</option><option value="pago_local">🏦 Pago en el local</option><option value="fiado">📝 Fiado (Cobrar después)</option>
-            </select>
-            <button onclick="preValidarVenta()" class="w-full bg-green-600 text-white py-4 rounded-xl font-black text-xl cursor-pointer shadow-lg btn-action">Confirmar Venta</button>
         </div>
     </div>
-</div>
-<div id="modalConfirmVenta" style="display: none;" class="modal-overlay">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
-        <h3 class="text-xl font-black text-gray-800">¿Confirmar Venta?</h3>
-        <div id="detalleConfirmVenta" class="text-left bg-gray-50 p-4 rounded-lg text-sm space-y-2 border border-gray-200"></div>
-        <div class="flex gap-3">
-            <button onclick="cancelarVentaModal()" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-xl font-bold text-lg cursor-pointer btn-action">Cancelar</button>
-            <button onclick="registrarVenta()" id="btnConfirmarFinal" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer btn-action">Sí, Cobrar</button>
+    <div id="modalPreguntaGPS" style="display: none;" class="modal-overlay">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
+            <div class="text-6xl">🛑</div>
+            <h3 class="text-xl font-black text-gray-800">¡Te detuviste!</h3>
+            <p id="textoPreguntaGPS" class="font-bold text-gray-600">¿Realizaste una venta aquí?</p>
+            <div class="flex gap-3">
+                <button onclick="respuestaGPSNo()" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-xl font-bold text-lg cursor-pointer btn-action">No, Seguir</button>
+                <button onclick="respuestaGPSSi()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer btn-action">Sí, Vender</button>
+            </div>
         </div>
     </div>
-</div>
-<div id="modalPreguntaGPS" style="display: none;" class="modal-overlay">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
-        <div class="text-6xl">🛑</div>
-        <h3 class="text-xl font-black text-gray-800">¡Te detuviste!</h3>
-        <p id="textoPreguntaGPS" class="font-bold text-gray-600">¿Realizaste una venta aquí?</p>
-        <div class="flex gap-3">
-            <button onclick="respuestaGPSNo()" class="flex-1 bg-gray-300 text-gray-800 py-3 rounded-xl font-bold text-lg cursor-pointer btn-action">No, Seguir</button>
-            <button onclick="respuestaGPSSi()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer btn-action">Sí, Vender</button>
+    <div id="modalEncontrado" style="display:none;" class="modal-overlay">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm space-y-3">
+            <h3 class="text-xl font-black">Nuevo punto Encontrado</h3>
+            <input id="encNombre" placeholder="Nombre del comercio" class="w-full px-3 py-3 border-2 rounded-lg font-bold">
+            <input id="encTelefono" placeholder="Teléfono" class="w-full px-3 py-3 border-2 rounded-lg font-bold">
+            <div class="flex gap-2">
+                <button onclick="cerrarEncontrado()" class="flex-1 bg-gray-300 py-3 rounded-xl font-bold">Cancelar</button>
+                <button onclick="registrarEncontrado()" class="flex-1 bg-purple-600 text-white py-3 rounded-xl font-black">Guardar</button>
+            </div>
         </div>
     </div>
-</div>
-<div id="modalEncontrado" style="display:none;" class="modal-overlay">
-    <div class="bg-white rounded-2xl p-6 w-full max-w-sm space-y-3">
-        <h3 class="text-xl font-black">Nuevo punto Encontrado</h3>
-        <input id="encNombre" placeholder="Nombre del comercio" class="w-full px-3 py-3 border-2 rounded-lg font-bold">
-        <input id="encTelefono" placeholder="Teléfono" class="w-full px-3 py-3 border-2 rounded-lg font-bold">
-        <div class="flex gap-2">
-            <button onclick="cerrarEncontrado()" class="flex-1 bg-gray-300 py-3 rounded-xl font-bold">Cancelar</button>
-            <button onclick="registrarEncontrado()" class="flex-1 bg-purple-600 text-white py-3 rounded-xl font-black">Guardar</button>
+    <div id="moduloPendientes" style="display: none;" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl p-6 max-w-lg mx-auto relative">
+            <button onclick="cerrarPendientes()" class="absolute top-3 right-4 text-2xl font-bold text-gray-400 cursor-pointer">✖</button>
+            <h2 class="text-xl font-black text-yellow-700 mb-4 text-center">📝 Cuentas Pendientes</h2>
+            <div id="listaPendientes" class="space-y-3"></div>
         </div>
     </div>
-</div>
-<div id="moduloPendientes" style="display: none;" class="fixed inset-0 bg-gray-900 bg-opacity-90 z-50 p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl p-6 max-w-lg mx-auto relative">
-        <button onclick="cerrarPendientes()" class="absolute top-3 right-4 text-2xl font-bold text-gray-400 cursor-pointer">✖️</button>
-        <h2 class="text-xl font-black text-yellow-700 mb-4 text-center">📝 Cuentas Pendientes</h2>
-        <div id="listaPendientes" class="space-y-3"></div>
-    </div>
-</div>
-<div id="moduloCierre" style="display: none;" class="p-4 space-y-4">
-    <button onclick="mostrarPantallaVentas()" class="w-full bg-blue-800 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 flex items-center justify-center btn-action"><span class="mr-2">⬅️</span> Volver a Ventas</button>
-    <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
-        <h3 class="font-bold text-gray-800 mb-3 text-lg">Cierre y Entrega del Día</h3>
-        <div class="bg-orange-50 p-4 rounded-xl mb-3 text-sm space-y-2">
-            <p class="font-black text-gray-700 mb-2">Productos Entregados:</p><div id="informeProductos" class="font-bold text-orange-900 space-y-1"></div><hr class="border-orange-300 my-2">
-            <p class="font-black text-gray-700 mb-2">Dinero Obtenido:</p>
-            <div class="flex justify-between font-bold text-orange-900"><span>Efectivo:</span> <span id="informeEfectivo">$0</span></div>
-            <div class="flex justify-between font-bold text-orange-900"><span>Transferencia:</span> <span id="informeTransferencia">$0</span></div>
-            <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta Crédito:</span> <span id="informeCredito">$0</span></div>
-            <div class="flex justify-between font-bold text-orange-900"><span>Tarjeta Débito:</span> <span id="informeDebito">$0</span></div>
-            <div class="flex justify-between font-bold text-orange-900"><span>Pago en el local:</span> <span id="informeLocal">$0</span></div><hr class="border-orange-300 my-2">
-            <p class="font-black text-yellow-700 mb-2">⚠️ Ventas Fiadas:</p><div class="flex justify-between font-bold text-yellow-800"><span>Total Fiado:</span> <span id="informeFiado" class="text-red-600">$0</span></div><hr class="border-orange-300 my-2">
-            <div class="flex justify-between font-black text-orange-900 text-lg mt-1"><span>TOTAL VENDIDO:</span> <span id="informeTotalGeneral">$0</span></div><hr class="border-orange-300 my-2">
-            <div class="flex justify-between font-bold text-green-700"><span>Vuelto Inicial:</span> <span id="informeVuelto">$0</span></div>
-            <div class="flex justify-between font-bold text-red-700"><span>Entregado Parcial:</span> <span id="informeEntregadoParcial">$0</span></div>
-            <div class="flex justify-between font-black text-green-700 text-lg mt-1"><span>A ENTREGAR (Efectivo):</span> <span id="informeTotalEntregar">$0</span></div>
-        </div>
-        <button onclick="realizarCierreParcial('parcial_mediodia')" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 btn-action">☀️ Entregar Parcial Mediodía</button>
-        <button onclick="realizarCierreParcial('parcial_tarde')" class="w-full bg-amber-600 text-white py-3 rounded-xl font-bold text-lg cursor-pointer mb-2 btn-action">🌇 Entregar Parcial Tarde</button>
-        <button onclick="cerrarJornada()" class="w-full bg-red-600 text-white py-3 rounded-xl font-black text-lg cursor-pointer btn-action">🔒 CERRAR JORNADA FINAL</button>
-    </div>
-</div>
+
  <script>
-     
-        // === MEGAL - TODO CON VERCEL POSTGRES, NADA DE SUPABASE ===
         const API = '/api/postgres';
         async function pg(table, metodo='GET', body=null, extra=''){
           let url = API + '?table=' + table + extra;
@@ -239,87 +216,131 @@
 
         document.addEventListener('DOMContentLoaded', async()=>{ await cargarRepartidoresLogin(); await cargarFlete(); verificarSesionPrevia(); });
         async function cargarFlete(){ try{ const conf=await pgGet('configuraciones'); const f=conf.find(c=>c.clave==='flete_reparto'); if(f) fleteConfigurado=num(f.valor); document.getElementById('textoFleteAuto').textContent="$"+fleteConfigurado.toLocaleString('es-UY'); }catch(e){} }
-        async function cargarRepartidoresLogin(){ const select=document.getElementById('selectRepartidor'); select.innerHTML='<option value="">Cargando...</option>'; try{ const data=await pgGet('repartidores'); select.innerHTML='<option value="">-- Seleccione --</option>'; data.filter(r=>String(r.activo)==='true'||r.activo===true||r.activo===1).forEach(r=>{ const o=document.createElement('option'); o.value=r.id; o.textContent=r.nombre; select.appendChild(o); }); }catch(e){ select.innerHTML='<option value="">Error cargando</option>'; } }
+
+        // CORREGIDO: si el repartidor no tiene campo activo, igual aparece. Antes filtraba a todos.
+        async function cargarRepartidoresLogin(){
+          const select=document.getElementById('selectRepartidor');
+          select.innerHTML='<option value="">Cargando...</option>';
+          try{
+            const data=await pgGet('repartidores');
+            select.innerHTML='<option value="">-- Seleccione --</option>';
+            data.filter(r=>{
+              if(r.activo===undefined || r.activo===null || r.activo==='') return true;
+              return String(r.activo)==='true' || r.activo===true || r.activo===1 || r.activo==='1';
+            }).forEach(r=>{
+              const o=document.createElement('option'); o.value=r.id; o.textContent=r.nombre; select.appendChild(o);
+            });
+            if(select.options.length<=1) select.innerHTML='<option value="">Sin repartidores en base</option>';
+          }catch(e){ select.innerHTML='<option value="">Error cargando</option>'; }
+        }
+
         function iniciarSesion(){ const s=document.getElementById('selectRepartidor'); if(!s.value) return; repartidorActual.id=s.value; repartidorActual.nombre=s.options[s.selectedIndex].text; localStorage.setItem('rep_id',repartidorActual.id); localStorage.setItem('rep_nombre',repartidorActual.nombre); document.getElementById('pantallaLogin').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; document.getElementById('nombreRepartidorTop').textContent=repartidorActual.nombre; document.getElementById('fechaHoy').textContent=new Date().toLocaleDateString('es-UY',{weekday:'long',year:'numeric',month:'long',day:'numeric'}); cargarDatosJornada(); }
         function verificarSesionPrevia(){ const rId=localStorage.getItem('rep_id'), rN=localStorage.getItem('rep_nombre'), jA=localStorage.getItem('jornada_activa'); if(rId&&rN){ repartidorActual.id=rId; repartidorActual.nombre=rN; document.getElementById('nombreRepartidorTop').textContent=rN; if(jA==='true'){ document.getElementById('pantallaLogin').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='none'; document.getElementById('pantallaTrabajo').style.display='block'; inicializarPantallaTrabajo(); } else { document.getElementById('pantallaLogin').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; cargarDatosJornada(); } } }
 
-        // STOCK helpers - reemplazan los rpc de Supabase
+        // CORREGIDO: sincroniza stock_deposito Y deposito (la web lee deposito)
         async function ajustarStockDeposito(producto_id, dLlenas, dVacias){
-            const all=await pgGet('stock_deposito'); let row=all.find(s=>String(s.producto_id)===String(producto_id));
+            const all=await pgGet('stock_deposito');
+            let row=all.find(s=>String(s.producto_id)===String(producto_id));
             if(!row) row={ id: uid('dep'), producto_id: producto_id, llenas:0, vacias:0 };
             await pgPost('stock_deposito',{ ...row, llenas:(parseInt(row.llenas)||0)+dLlenas, vacias:(parseInt(row.vacias)||0)+dVacias });
+            try{
+              const dep=await pgGet('deposito');
+              const d=dep.find(s=>String(s.producto_id)===String(producto_id));
+              if(d){
+                await pgPost('deposito',{ accion:'balance_inicial', producto_id: String(producto_id), llenas: Math.max(0,(parseInt(d.llenas)||0)+dLlenas), vacias: Math.max(0,(parseInt(d.vacias)||0)+dVacias), kilos_en_uso: num(d.kilos_en_uso), kilos_restantes: num(d.kilos_restantes) });
+              }
+            }catch(e){}
         }
         async function ajustarStockCamioneta(producto_id, dLlenas, dVacias, dDef){
             const all=await pgGet('stock_camioneta'); let row=all.find(s=>String(s.producto_id)===String(producto_id)&&String(s.repartidor_id)===String(repartidorActual.id));
             if(!row) row={ id: uid('cam'), repartidor_id: repartidorActual.id, producto_id: producto_id, llenas:0, vacias:0, defectuosas:0 };
-            await pgPost('stock_camioneta',{ ...row, llenas:(parseInt(row.llenas)||0)+dLlenas, vacias:(parseInt(row.vacias)||0)+dVacias, defectuosas:(parseInt(row.defectuosas)||0)+(dDef||0) });
+            await pgPost('stock_camioneta',{ ...row, llenas:Math.max(0,(parseInt(row.llenas)||0)+dLlenas), vacias:Math.max(0,(parseInt(row.vacias)||0)+dVacias), defectuosas:Math.max(0,(parseInt(row.defectuosas)||0)+(dDef||0)) });
         }
-async function cargarDatosJornada(){ const c=document.getElementById('contenedorStockInicial'); c.innerHTML=''; try{ const all=await pgGet('productos'); productosCamioneta=all; productosCamioneta.forEach(p=>{ const d=document.createElement('div'); d.className='bg-gray-100 p-2 rounded-lg text-center'; d.innerHTML='<label class="block text-xs font-bold text-gray-700 mb-1">'+p.nombre+'</label><input type="number" id="stockInicial_'+p.id+'" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">'; c.appendChild(d); }); }catch(e){} }
-async function registrarInicioJornada(){
-    const km=document.getElementById('inputKmInicio').value, v=document.getElementById('inputVuelto').value;
-    if(!km||parseInt(km)<=0){ mostrarToast('Ingresá KM','error'); return; }
-    localStorage.setItem('km_inicio',km); localStorage.setItem('vuelto_inicio',v); localStorage.setItem('entregado_parcial','0');
-    try{
-        const sd=await pgGet('stock_deposito'); let valid=true, movs=[];
-        let s11=0, s13=0, s45=0;
-        for(const p of productosCamioneta){ const cant=parseInt(document.getElementById('stockInicial_'+p.id).value)||0; const disp=sd.find(s=>String(s.producto_id)===String(p.id))?.llenas||0; if(cant>disp){ mostrarToast('Sin stock '+p.nombre,'error'); valid=false; break; } if(cant>0) movs.push({producto_id:p.id,cantidad:cant}); if(p.tipo==='garrafa_11') s11=cant; if(p.tipo==='garrafa_13') s13=cant; if(p.tipo==='garrafa_45') s45=cant; }
-        if(!valid) return;
-        await pgPost('jornadas',{ id: uid('jor'), repartidor_id: repartidorActual.id, fecha: hoyUY(), hora_salida: new Date().toLocaleTimeString('es-UY'), km_inicio: parseInt(km), stock_11_inicial: s11, stock_13_inicial: s13, stock_45_inicial: s45, cambio_inicial: num(v), estado:'abierta' });
-        for(const m of movs){
-            await ajustarStockDeposito(m.producto_id,-m.cantidad,0);
-            await ajustarStockCamioneta(m.producto_id,m.cantidad,0,0);
-            await pgPost('movimientos_stock',{ id: uid('mov'), tipo_mov:'carga_camioneta', producto_id:m.producto_id, repartidor_id:repartidorActual.id, llenas:-m.cantidad, vacias:0, defectuosas:0, observaciones:'Carga inicial', fecha: new Date().toISOString() });
+
+        async function cargarDatosJornada(){ const c=document.getElementById('contenedorStockInicial'); c.innerHTML=''; try{ const all=await pgGet('productos'); productosCamioneta=all; productosCamioneta.forEach(p=>{ const d=document.createElement('div'); d.className='bg-gray-100 p-2 rounded-lg text-center'; d.innerHTML='<label class="block text-xs font-bold text-gray-700 mb-1">'+p.nombre+'</label><input type="number" id="stockInicial_'+p.id+'" min="0" value="0" class="block w-full px-2 py-2 border-2 border-gray-300 rounded-lg text-center font-black text-lg">'; c.appendChild(d); }); }catch(e){} }
+
+        // CORREGIDO: si stock_deposito está vacío, usa deposito como fuente. Antes siempre decía "Sin stock" y no abría Ventas.
+        async function registrarInicioJornada(){
+            const km=document.getElementById('inputKmInicio').value, v=document.getElementById('inputVuelto').value;
+            if(!km||parseInt(km)<=0){ mostrarToast('Ingresá KM','error'); return; }
+            localStorage.setItem('km_inicio',km); localStorage.setItem('vuelto_inicio',v); localStorage.setItem('entregado_parcial','0');
+            try{
+                let sd=await pgGet('stock_deposito');
+                if(!sd || sd.length===0) sd=await pgGet('deposito');
+                let valid=true, movs=[];
+                let s11=0, s13=0, s45=0;
+                for(const p of productosCamioneta){
+                  const cant=parseInt(document.getElementById('stockInicial_'+p.id).value)||0;
+                  const disp=sd.find(s=>String(s.producto_id)===String(p.id))?.llenas||0;
+                  if(cant>disp){ mostrarToast('Sin stock '+p.nombre+' (hay '+disp+')','error'); valid=false; break; }
+                  if(cant>0) movs.push({producto_id:p.id,cantidad:cant});
+                  if(p.tipo==='garrafa_11') s11=cant; if(p.tipo==='garrafa_13') s13=cant; if(p.tipo==='garrafa_45') s45=cant;
+                }
+                if(!valid) return;
+                await pgPost('jornadas',{ id: uid('jor'), repartidor_id: repartidorActual.id, fecha: hoyUY(), hora_salida: new Date().toLocaleTimeString('es-UY'), km_inicio: parseInt(km), stock_11_inicial: s11, stock_13_inicial: s13, stock_45_inicial: s45, cambio_inicial: num(v), estado:'abierta' });
+                for(const m of movs){
+                    await ajustarStockDeposito(m.producto_id,-m.cantidad,0);
+                    await ajustarStockCamioneta(m.producto_id,m.cantidad,0,0);
+                    await pgPost('movimientos_stock',{ id: uid('mov'), tipo_mov:'carga_camioneta', producto_id:m.producto_id, repartidor_id:repartidorActual.id, llenas:-m.cantidad, vacias:0, defectuosas:0, observaciones:'Carga inicial', fecha: new Date().toISOString() });
+                }
+                hablar("Jornada iniciada."); localStorage.setItem('jornada_activa','true');
+                // 👇 ABRIR VENTAS - esto es lo que pediste
+                document.getElementById('pantallaInicioJornada').style.display='none';
+                document.getElementById('pantallaTrabajo').style.display='block';
+                document.getElementById('moduloVentas').style.display='block';
+                document.getElementById('moduloCierre').style.display='none';
+                inicializarPantallaTrabajo();
+            }catch(e){ mostrarToast('Error: '+e.message,'error'); }
         }
-        hablar("Jornada iniciada."); localStorage.setItem('jornada_activa','true');
-        document.getElementById('pantallaInicioJornada').style.display='none'; document.getElementById('pantallaTrabajo').style.display='block'; inicializarPantallaTrabajo();
-    }catch(e){ mostrarToast('Error: '+e.message,'error'); }
-}
-async function inicializarPantallaTrabajo(){ if(productosCamioneta.length===0){ const all=await pgGet('productos'); productosCamioneta=all; } await cargarStockCamionetaUI(); await cargarSelectsVentas(); iniciarSeguimientoGPS(); }
-async function cargarStockCamionetaUI(){ const g=document.getElementById('stockGridUI'); if(!g) return; g.innerHTML=''; try{ const all=await pgGet('stock_camioneta'); const s=all.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)); let h=''; productosCamioneta.forEach(p=>{ const i=s.find(x=>String(x.producto_id)===String(p.id)); h+='<div class="bg-white p-2 rounded-lg text-center shadow-sm"><p class="text- font-bold text-gray-500 truncate">'+p.nombre.replace('Garrafa ','')+'</p><p class="text-2xl font-black text-green-700">'+(i?i.llenas:0)+'</p><p class="text- font-bold text-gray-400">Vac: '+(i?i.vacias:0)+' | Cambio: '+(i?i.defectuosas:0)+'</p></div>'; }); g.innerHTML=h; }catch(e){} }
-async function abrirRecarga(){
-    document.getElementById('seccionRecarga').style.display='block'; const c=document.getElementById('contenedorRecarga'); c.innerHTML='';
-    try{
-        const allMov=await pgGet('movimientos_stock'); const l=allMov.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)&&x.tipo_mov==='recarga_camioneta').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
-        document.getElementById('ultimaRecargaHora').textContent=l.length>0?"Última: "+new Date(l[0].fecha||l[0].created_at).toLocaleTimeString('es-UY'):"Sin recargas";
-        const allSc=await pgGet('stock_camioneta'); const sc=allSc.filter(x=>String(x.repartidor_id)===String(repartidorActual.id));
-        productosCamioneta.forEach(p=>{ const i=sc.find(x=>String(x.producto_id)===String(p.id)); const d=document.createElement('div'); d.className='bg-white p-2 rounded-lg text-center shadow-sm border'; d.innerHTML='<label class="block text-xs font-bold text-gray-700 mb-1">'+p.nombre.replace('Garrafa ','')+'</label><div class="mb-1"><label class="block text- font-bold text-gray-500">ENTREGO VACÍAS</label><input type="number" id="recVac_'+p.id+'" min="0" max="'+(i?i.vacias:0)+'" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div class="mb-1"><label class="block text- font-bold text-orange-600">ENTREGO PARA CAMBIO</label><input type="number" id="recDef_'+p.id+'" min="0" max="'+(i?i.defectuosas:0)+'" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div><label class="block text- font-bold text-green-700">LLEVO LLENAS</label><input type="number" id="recLlen_'+p.id+'" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700"></div>'; c.appendChild(d); });
-    }catch(e){}
-}
-function cerrarRecarga(){ document.getElementById('seccionRecarga').style.display='none'; }
-async function registrarRecarga(){
-    try{
-        const sd=await pgGet('stock_deposito'); let movs=[], valid=true;
-        for(const p of productosCamioneta){ const v=parseInt(document.getElementById('recVac_'+p.id).value)||0, df=parseInt(document.getElementById('recDef_'+p.id)?.value||0), l=parseInt(document.getElementById('recLlen_'+p.id).value)||0; if(l>0){ const d=sd.find(s=>String(s.producto_id)===String(p.id))?.llenas||0; if(l>d){ mostrarToast('Sin depósito '+p.nombre,'error'); valid=false; break; } } if(v>0||l>0||df>0) movs.push({pid:p.id,v,l,df}); }
-        if(!valid) return;
-        for(const m of movs){ await ajustarStockDeposito(m.pid,-m.l,m.v); await ajustarStockCamioneta(m.pid,m.l,-m.v,-m.df); await pgPost('movimientos_stock',{ id: uid('mov'), tipo_mov:'recarga_camioneta', producto_id:m.pid, repartidor_id:repartidorActual.id, llenas:m.l, vacias:-m.v, defectuosas:-m.df, fecha: new Date().toISOString() }); }
-        hablar("Recarga exitosa"); cerrarRecarga(); cargarStockCamionetaUI();
-    }catch(e){ mostrarToast('Error: '+e.message,'error'); }
-}
 
-async function cargarSelectsVentas(){
-    const s=document.getElementById('ventaTipoGarrafa'); s.innerHTML='<option value="">-- Producto --</option>';
-    productosCamioneta.forEach(p=>s.innerHTML+='<option value="'+p.id+'" data-precio="'+(p.precio_venta||p.precio||0)+'">'+p.nombre+' - $'+(p.precio_venta||p.precio||0)+'</option>');
-    try{
-      const pts=await pgGet('puntos_ruta');
-      clientesCache=pts.filter(x=>String(x.tipo||x.categoria||'').toLowerCase().includes('comercio'));
-      puntosRutaCache=pts;
-      const dl=document.getElementById('lista-comercios'); dl.innerHTML='';
-      clientesCache.forEach(x=>{ const o=document.createElement('option'); o.value=x.nombre; dl.appendChild(o); });
-    }catch(e){}
-}
-function actualizarGarrafas(){ const t=document.getElementById('ventaTipoCliente').value; document.getElementById('inputClienteId').value=''; document.getElementById('inputClienteNombre').value=''; document.getElementById('seccionClienteComercio').style.display=(t==='comercio'||t==='comercio_especial'||t==='comercio_mides')?'block':'none'; document.getElementById('seccionFlete').style.display=(t==='particular'||t==='particular_mides')?'block':'none'; const av=document.getElementById('avisoBloqueoComercio'); if(av) av.style.display='none'; document.getElementById('alertaGeocerca').style.display='none'; calcularPrecioVenta(); }
-function seleccionarCliente(){ const n=document.getElementById('inputClienteNombre').value; const c=clientesCache.find(x=>x.nombre===n); document.getElementById('inputClienteId').value=c?c.id:''; document.getElementById('alertaGeocerca').style.display=c?'block':'none'; const av=document.getElementById('avisoBloqueoComercio'); if(av) av.style.display=c?'none':'block'; }
-function calcularPrecioVenta(){ const ps=document.getElementById('ventaTipoGarrafa'), pb=parseFloat(ps.options[ps.selectedIndex]?.dataset.precio||0), c=parseInt(document.getElementById('ventaCantidad').value)||0, m=document.getElementById('ventaModoVenta').value, tc=document.getElementById('ventaTipoCliente').value, mp=document.getElementById('ventaModalidad').value; let sub=0; if(m==='cambio_falla') sub=0; else sub=pb*c; let fl=0; if((tc==='particular'||tc==='particular_mides')&&m!=='cambio_falla') fl=fleteConfigurado; let rc=0; if(mp==='tarjeta_credito'&&m!=='cambio_falla') rc=RECARGO_TARJETA_CREDITO*c; document.getElementById('ventaTotalOculto').value=sub+fl+rc; document.getElementById('ventaTotalPantalla').textContent="$"+(sub+fl+rc).toLocaleString('es-UY'); const tf=document.getElementById('textoFleteEnTotal'); if(tf) tf.textContent = fl>0 ? ('Incluye flete $'+fl.toLocaleString('es-UY')) : (tc.startsWith('comercio') ? 'Comercio - Sin flete' : ''); }
-function arreglarCantidad(){ const i=document.getElementById('ventaCantidad'); if(!i.value||parseInt(i.value)<1) i.value=1; calcularPrecioVenta(); }
-function preValidarVenta(){
-    if(!document.getElementById('ventaTipoCliente').value){ mostrarToast('Seleccioná cliente','error'); return; }
-    if(!document.getElementById('ventaTipoGarrafa').value){ mostrarToast('Seleccioná producto','error'); return; }
-    if(document.getElementById('ventaTipoCliente').value.startsWith('comercio') && !document.getElementById('inputClienteId').value){ mostrarToast('Este punto NO está marcado como Comercio. Solo podés vender como Particular','error'); return; }
-    const ps=document.getElementById('ventaTipoGarrafa'), pn=ps.options[ps.selectedIndex].text.split(' - ')[0], mt=document.getElementById('ventaModalidad').options[document.getElementById('ventaModalidad').selectedIndex].text, md=document.getElementById('ventaModoVenta').options[document.getElementById('ventaModoVenta').selectedIndex].text, t=parseFloat(document.getElementById('ventaTotalOculto').value)||0;
-    document.getElementById('detalleConfirmVenta').innerHTML='<p><b>Producto:</b> '+pn+' (x'+document.getElementById('ventaCantidad').value+')</p><p><b>Modo:</b> '+md+'</p><p><b>Pago:</b> '+mt+'</p><p class="text-xl font-black text-green-700 mt-2">TOTAL: $'+t.toLocaleString('es-UY')+'</p>';
-    document.getElementById('modalConfirmVenta').style.display='flex';
-}
+        async function inicializarPantallaTrabajo(){ if(productosCamioneta.length===0){ const all=await pgGet('productos'); productosCamioneta=all; } await cargarStockCamionetaUI(); await cargarSelectsVentas(); iniciarSeguimientoGPS(); }
+        async function cargarStockCamionetaUI(){ const g=document.getElementById('stockGridUI'); if(!g) return; g.innerHTML=''; try{ const all=await pgGet('stock_camioneta'); const s=all.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)); let h=''; productosCamioneta.forEach(p=>{ const i=s.find(x=>String(x.producto_id)===String(p.id)); h+='<div class="bg-white p-2 rounded-lg text-center shadow-sm"><p class="text-xs font-bold text-gray-500 truncate">'+p.nombre.replace('Garrafa ','')+'</p><p class="text-2xl font-black text-green-700">'+(i?i.llenas:0)+'</p><p class="text-xs font-bold text-gray-400">Vac: '+(i?i.vacias:0)+' | Cambio: '+(i?i.defectuosas:0)+'</p></div>'; }); g.innerHTML=h; }catch(e){} }
 
+        async function abrirRecarga(){
+            document.getElementById('seccionRecarga').style.display='block'; const c=document.getElementById('contenedorRecarga'); c.innerHTML='';
+            try{
+                const allMov=await pgGet('movimientos_stock'); const l=allMov.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)&&x.tipo_mov==='recarga_camioneta').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+                document.getElementById('ultimaRecargaHora').textContent=l.length>0?"Última: "+new Date(l[0].fecha||l[0].created_at).toLocaleTimeString('es-UY'):"Sin recargas";
+                const allSc=await pgGet('stock_camioneta'); const sc=allSc.filter(x=>String(x.repartidor_id)===String(repartidorActual.id));
+                productosCamioneta.forEach(p=>{ const i=sc.find(x=>String(x.producto_id)===String(p.id)); const d=document.createElement('div'); d.className='bg-white p-2 rounded-lg text-center shadow-sm border'; d.innerHTML='<label class="block text-xs font-bold text-gray-700 mb-1">'+p.nombre.replace('Garrafa ','')+'</label><div class="mb-1"><label class="block text-xs font-bold text-gray-500">ENTREGO VACÍAS</label><input type="number" id="recVac_'+p.id+'" min="0" max="'+(i?i.vacias:0)+'" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div class="mb-1"><label class="block text-xs font-bold text-orange-600">ENTREGO PARA CAMBIO</label><input type="number" id="recDef_'+p.id+'" min="0" max="'+(i?i.defectuosas:0)+'" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold"></div><div><label class="block text-xs font-bold text-green-700">LLEVO LLENAS</label><input type="number" id="recLlen_'+p.id+'" min="0" value="0" class="w-full px-1 py-1 border rounded text-center text-sm font-bold text-green-700"></div>'; c.appendChild(d); });
+            }catch(e){}
+        }
+        function cerrarRecarga(){ document.getElementById('seccionRecarga').style.display='none'; }
+        async function registrarRecarga(){
+            try{
+                let sd=await pgGet('stock_deposito');
+                if(!sd || sd.length===0) sd=await pgGet('deposito');
+                let movs=[], valid=true;
+                for(const p of productosCamioneta){ const v=parseInt(document.getElementById('recVac_'+p.id).value)||0, df=parseInt(document.getElementById('recDef_'+p.id)?.value||0), l=parseInt(document.getElementById('recLlen_'+p.id).value)||0; if(l>0){ const d=sd.find(s=>String(s.producto_id)===String(p.id))?.llenas||0; if(l>d){ mostrarToast('Sin depósito '+p.nombre,'error'); valid=false; break; } } if(v>0||l>0||df>0) movs.push({pid:p.id,v,l,df}); }
+                if(!valid) return;
+                for(const m of movs){ await ajustarStockDeposito(m.pid,-m.l,m.v); await ajustarStockCamioneta(m.pid,m.l,-m.v,-m.df); await pgPost('movimientos_stock',{ id: uid('mov'), tipo_mov:'recarga_camioneta', producto_id:m.pid, repartidor_id:repartidorActual.id, llenas:m.l, vacias:-m.v, defectuosas:-m.df, fecha: new Date().toISOString() }); }
+                hablar("Recarga exitosa"); cerrarRecarga(); cargarStockCamionetaUI();
+            }catch(e){ mostrarToast('Error: '+e.message,'error'); }
+        }
+
+        async function cargarSelectsVentas(){
+            const s=document.getElementById('ventaTipoGarrafa'); s.innerHTML='<option value="">-- Producto --</option>';
+            productosCamioneta.forEach(p=>s.innerHTML+='<option value="'+p.id+'" data-precio="'+(p.precio_venta||p.precio||0)+'">'+p.nombre+' - $'+(p.precio_venta||p.precio||0)+'</option>');
+            try{
+              const pts=await pgGet('puntos_ruta');
+              clientesCache=pts.filter(x=>String(x.tipo||x.categoria||'').toLowerCase().includes('comercio'));
+              puntosRutaCache=pts;
+              const dl=document.getElementById('lista-comercios'); dl.innerHTML='';
+              clientesCache.forEach(x=>{ const o=document.createElement('option'); o.value=x.nombre; dl.appendChild(o); });
+            }catch(e){}
+        }
+        function actualizarGarrafas(){ const t=document.getElementById('ventaTipoCliente').value; document.getElementById('inputClienteId').value=''; document.getElementById('inputClienteNombre').value=''; document.getElementById('seccionClienteComercio').style.display=(t==='comercio'||t==='comercio_especial'||t==='comercio_mides')?'block':'none'; document.getElementById('seccionFlete').style.display=(t==='particular'||t==='particular_mides')?'block':'none'; const av=document.getElementById('avisoBloqueoComercio'); if(av) av.style.display='none'; document.getElementById('alertaGeocerca').style.display='none'; calcularPrecioVenta(); }
+        function seleccionarCliente(){ const n=document.getElementById('inputClienteNombre').value; const c=clientesCache.find(x=>x.nombre===n); document.getElementById('inputClienteId').value=c?c.id:''; document.getElementById('alertaGeocerca').style.display=c?'block':'none'; const av=document.getElementById('avisoBloqueoComercio'); if(av) av.style.display=c?'none':'block'; }
+        function calcularPrecioVenta(){ const ps=document.getElementById('ventaTipoGarrafa'), pb=parseFloat(ps.options[ps.selectedIndex]?.dataset.precio||0), c=parseInt(document.getElementById('ventaCantidad').value)||0, m=document.getElementById('ventaModoVenta').value, tc=document.getElementById('ventaTipoCliente').value, mp=document.getElementById('ventaModalidad').value; let sub=0; if(m==='cambio_falla') sub=0; else sub=pb*c; let fl=0; if((tc==='particular'||tc==='particular_mides')&&m!=='cambio_falla') fl=fleteConfigurado; let rc=0; if(mp==='tarjeta_credito'&&m!=='cambio_falla') rc=RECARGO_TARJETA_CREDITO*c; document.getElementById('ventaTotalOculto').value=sub+fl+rc; document.getElementById('ventaTotalPantalla').textContent="$"+(sub+fl+rc).toLocaleString('es-UY'); const tf=document.getElementById('textoFleteEnTotal'); if(tf) tf.textContent = fl>0 ? ('Incluye flete $'+fl.toLocaleString('es-UY')) : (tc.startsWith('comercio') ? 'Comercio - Sin flete' : ''); }
+        function arreglarCantidad(){ const i=document.getElementById('ventaCantidad'); if(!i.value||parseInt(i.value)<1) i.value=1; calcularPrecioVenta(); }
+        function preValidarVenta(){
+            if(!document.getElementById('ventaTipoCliente').value){ mostrarToast('Seleccioná cliente','error'); return; }
+            if(!document.getElementById('ventaTipoGarrafa').value){ mostrarToast('Seleccioná producto','error'); return; }
+            if(document.getElementById('ventaTipoCliente').value.startsWith('comercio') && !document.getElementById('inputClienteId').value){ mostrarToast('Este punto NO está marcado como Comercio. Solo podés vender como Particular','error'); return; }
+            const ps=document.getElementById('ventaTipoGarrafa'), pn=ps.options[ps.selectedIndex].text.split(' - ')[0], mt=document.getElementById('ventaModalidad').options[document.getElementById('ventaModalidad').selectedIndex].text, md=document.getElementById('ventaModoVenta').options[document.getElementById('ventaModoVenta').selectedIndex].text, t=parseFloat(document.getElementById('ventaTotalOculto').value)||0;
+            document.getElementById('detalleConfirmVenta').innerHTML='<p><b>Producto:</b> '+pn+' (x'+document.getElementById('ventaCantidad').value+')</p><p><b>Modo:</b> '+md+'</p><p><b>Pago:</b> '+mt+'</p><p class="text-xl font-black text-green-700 mt-2">TOTAL: $'+t.toLocaleString('es-UY')+'</p>';
+            document.getElementById('modalConfirmVenta').style.display='flex';
+        }
         function cancelarVentaModal(){ document.getElementById('modalConfirmVenta').style.display='none'; hablar("Cancelada"); }
         async function registrarVenta(){
             const b=document.getElementById('btnConfirmarFinal'); b.textContent='Procesando...'; b.disabled=true;
@@ -357,47 +378,48 @@ function preValidarVenta(){
             }catch(e){ mostrarToast('Error','error'); }
         }
 
-async function mostrarPantallaCierre(){
-    document.getElementById('moduloVentas').style.display='none'; document.getElementById('moduloCierre').style.display='block';
-    try{
-        const all=await pgGet('ventas'); const v=all.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)&&esHoy(x.fecha||x.created_at));
-        let te=0,tt=0,tc=0,td=0,tl=0,tf=0,tg=0,tca=0;
-        let detalleHtml='';
-        productosCamioneta.forEach(p=>{
-          const deEste=v.filter(x=>String(x.producto_id)===String(p.id));
-          if(!deEste.length) return;
-          let cant=0, monto=0;
-          deEste.forEach(x=>{ cant+=parseInt(x.cantidad_llenas)||0; monto+=num(x.total); });
-          detalleHtml+='<div class="flex justify-between"><span>'+p.nombre+':</span><span>'+cant+' un - $'+monto.toLocaleString('es-UY')+'</span></div>';
-        });
-        v.forEach(x=>{ tg+=num(x.total); tca+=parseInt(x.cantidad_defectuosas)||0; if(x.estado==='Pendiente'||x.metodo_pago==='fiado') tf+=num(x.total); else{ if(x.metodo_pago==='efectivo') te+=num(x.total); else if(x.metodo_pago==='transferencia') tt+=num(x.total); else if(x.metodo_pago==='tarjeta_credito') tc+=num(x.total); else if(x.metodo_pago==='tarjeta_debito') td+=num(x.total); else if(x.metodo_pago==='pago_local') tl+=num(x.total); } });
-        const vl=num(localStorage.getItem('vuelto_inicio')), ep=num(localStorage.getItem('entregado_parcial')), ae=te+vl-ep;
-        document.getElementById('informeProductos').innerHTML=detalleHtml+'<div class="flex justify-between"><span>Cambios / Fallas:</span><span>'+tca+'</span></div>';
-        document.getElementById('informeEfectivo').textContent="$"+te.toLocaleString('es-UY'); document.getElementById('informeTransferencia').textContent="$"+tt.toLocaleString('es-UY'); document.getElementById('informeCredito').textContent="$"+tc.toLocaleString('es-UY'); document.getElementById('informeDebito').textContent="$"+td.toLocaleString('es-UY'); document.getElementById('informeLocal').textContent="$"+tl.toLocaleString('es-UY'); document.getElementById('informeFiado').textContent="$"+tf.toLocaleString('es-UY'); document.getElementById('informeTotalGeneral').textContent="$"+tg.toLocaleString('es-UY'); document.getElementById('informeVuelto').textContent="$"+vl.toLocaleString('es-UY'); document.getElementById('informeEntregadoParcial').textContent="$"+ep.toLocaleString('es-UY'); document.getElementById('informeTotalEntregar').textContent="$"+Math.max(0,ae).toLocaleString('es-UY');
-        window._detalleCierreActual={ detalleHtml, total: tg, efectivo: te, transferencia: tt, credito: tc, debito: td, local: tl, fiado: tf, vuelto: vl, entregadoParcial: ep, aEntregar: Math.max(0,ae) };
-    }catch(e){}
-}
-async function realizarCierreParcial(tipo){
-    const a=window._detalleCierreActual?window._detalleCierreActual.aEntregar:0;
-    const m=prompt('¿Cuánto entregás?\nTipo: '+tipo+'\n(Disponible: $'+a.toLocaleString('es-UY')+')');
-    if(m&&!isNaN(parseFloat(m))&&parseFloat(m)>0){
-        localStorage.setItem('entregado_parcial', (num(localStorage.getItem('entregado_parcial'))+parseFloat(m)).toString());
-        try{ await pgPost('cierres',{ id: uid('cie'), repartidor_id: repartidorActual.id, tipo: tipo||'parcial', monto: parseFloat(m), detalle: window._detalleCierreActual?window._detalleCierreActual.detalleHtml:'', total_vendido: window._detalleCierreActual?window._detalleCierreActual.total:0, fecha: new Date().toISOString() }); }catch(e){}
-        hablar("Parcial registrada"); mostrarPantallaCierre();
-    }
-}
-async function cerrarJornada(){
-    if(!confirm('¿CERRAR JORNADA FINAL?')) return;
-    try{
-      await pgPost('cierres',{ id: uid('cie'), repartidor_id: repartidorActual.id, tipo:'final', monto: window._detalleCierreActual?window._detalleCierreActual.aEntregar:0, detalle: window._detalleCierreActual?window._detalleCierreActual.detalleHtml:'', total_vendido: window._detalleCierreActual?window._detalleCierreActual.total:0, fecha: new Date().toISOString() });
-      const all=await pgGet('jornadas'); const j=all.find(x=>String(x.repartidor_id)===String(repartidorActual.id)&&x.estado==='abierta'); if(j) await pgPost('jornadas',{ ...j, estado:'cerrada', hora_cierre: new Date().toLocaleTimeString('es-UY') });
-    }catch(e){}
-    localStorage.removeItem('jornada_activa'); localStorage.removeItem('km_inicio'); localStorage.removeItem('vuelto_inicio'); localStorage.removeItem('entregado_parcial'); detenerSeguimientoGPS(); hablar("Jornada finalizada."); document.getElementById('moduloCierre').style.display='none'; document.getElementById('pantallaTrabajo').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; cargarDatosJornada();
-}
-
-        function mostrarPantallaVentas(){ document.getElementById('moduloCierre').style.display='none'; document.getElementById('moduloVentas').style.display='block'; }
-
-        // ENCONTRADO - sin mapa, usa GPS que ya tenés
+        async function mostrarPantallaCierre(){
+            document.getElementById('moduloVentas').style.display='none'; document.getElementById('moduloCierre').style.display='block';
+            try{
+                const all=await pgGet('ventas'); const v=all.filter(x=>String(x.repartidor_id)===String(repartidorActual.id)&&esHoy(x.fecha||x.created_at));
+                let te=0,tt=0,tc=0,td=0,tl=0,tf=0,tg=0,tca=0;
+                let detalleHtml='';
+                productosCamioneta.forEach(p=>{
+                  const deEste=v.filter(x=>String(x.producto_id)===String(p.id));
+                  if(!deEste.length) return;
+                  let cant=0, monto=0;
+                  deEste.forEach(x=>{ cant+=parseInt(x.cantidad_llenas)||0; monto+=num(x.total); });
+                  detalleHtml+='<div class="flex justify-between"><span>'+p.nombre+':</span><span>'+cant+' un - $'+monto.toLocaleString('es-UY')+'</span></div>';
+                });
+                v.forEach(x=>{ tg+=num(x.total); tca+=parseInt(x.cantidad_defectuosas)||0; if(x.estado==='Pendiente'||x.metodo_pago==='fiado') tf+=num(x.total); else{ if(x.metodo_pago==='efectivo') te+=num(x.total); else if(x.metodo_pago==='transferencia') tt+=num(x.total); else if(x.metodo_pago==='tarjeta_credito') tc+=num(x.total); else if(x.metodo_pago==='tarjeta_debito') td+=num(x.total); else if(x.metodo_pago==='pago_local') tl+=num(x.total); } });
+                const vl=num(localStorage.getItem('vuelto_inicio')), ep=num(localStorage.getItem('entregado_parcial')), ae=te+vl-ep;
+                document.getElementById('informeProductos').innerHTML=detalleHtml+'<div class="flex justify-between"><span>Cambios / Fallas:</span><span>'+tca+'</span></div>';
+                document.getElementById('informeEfectivo').textContent="$"+te.toLocaleString('es-UY'); document.getElementById('informeTransferencia').textContent="$"+tt.toLocaleString('es-UY'); document.getElementById('informeCredito').textContent="$"+tc.toLocaleString('es-UY'); document.getElementById('informeDebito').textContent="$"+td.toLocaleString('es-UY'); document.getElementById('informeLocal').textContent="$"+tl.toLocaleString('es-UY'); document.getElementById('informeFiado').textContent="$"+tf.toLocaleString('es-UY'); document.getElementById('informeTotalGeneral').textContent="$"+tg.toLocaleString('es-UY'); document.getElementById('informeVuelto').textContent="$"+vl.toLocaleString('es-UY'); document.getElementById('informeEntregadoParcial').textContent="$"+ep.toLocaleString('es-UY'); document.getElementById('informeTotalEntregar').textContent="$"+Math.max(0,ae).toLocaleString('es-UY');
+                window._detalleCierreActual={ detalleHtml, total: tg, efectivo: te, transferencia: tt, credito: tc, debito: td, local: tl, fiado: tf, vuelto: vl, entregadoParcial: ep, aEntregar: Math.max(0,ae) };
+            }catch(e){}
+        }
+        async function realizarCierreParcial(tipo){
+            const a=window._detalleCierreActual?window._detalleCierreActual.aEntregar:0;
+            const m=prompt('¿Cuánto entregás?\nTipo: '+tipo+'\n(Disponible: $'+a.toLocaleString('es-UY')+')');
+            if(m&&!isNaN(parseFloat(m))&&parseFloat(m)>0){
+                localStorage.setItem('entregado_parcial', (num(localStorage.getItem('entregado_parcial'))+parseFloat(m)).toString());
+                try{ await pgPost('cierres',{ id: uid('cie'), repartidor_id: repartidorActual.id, tipo: tipo||'parcial', monto: parseFloat(m), detalle: window._detalleCierreActual?window._detalleCierreActual.detalleHtml:'', total_vendido: window._detalleCierreActual?window._detalleCierreActual.total:0, fecha: new Date().toISOString() }); }catch(e){}
+                hablar("Parcial registrada"); mostrarPantallaCierre();
+            }
+        }
+        async function cerrarJornada(){
+            if(!confirm('¿CERRAR JORNADA FINAL?')) return;
+            try{
+              await pgPost('cierres',{ id: uid('cie'), repartidor_id: repartidorActual.id, tipo:'final', monto: window._detalleCierreActual?window._detalleCierreActual.aEntregar:0, detalle: window._detalleCierreActual?window._detalleCierreActual.detalleHtml:'', total_vendido: window._detalleCierreActual?window._detalleCierreActual.total:0, fecha: new Date().toISOString() });
+              const all=await pgGet('jornadas'); const j=all.find(x=>String(x.repartidor_id)===String(repartidorActual.id)&&x.estado==='abierta'); if(j) await pgPost('jornadas',{ ...j, estado:'cerrada', hora_cierre: new Date().toLocaleTimeString('es-UY') });
+            }catch(e){}
+            localStorage.removeItem('jornada_activa'); localStorage.removeItem('km_inicio'); localStorage.removeItem('vuelto_inicio'); localStorage.removeItem('entregado_parcial'); detenerSeguimientoGPS(); hablar("Jornada finalizada."); document.getElementById('moduloCierre').style.display='none'; document.getElementById('pantallaTrabajo').style.display='none'; document.getElementById('pantallaInicioJornada').style.display='flex'; cargarDatosJornada();
+        }
+        function mostrarPantallaVentas(){
+          document.getElementById('pantallaTrabajo').style.display='block';
+          document.getElementById('moduloCierre').style.display='none';
+          document.getElementById('moduloVentas').style.display='block';
+        }
         function abrirEncontrado(){ document.getElementById('modalEncontrado').style.display='flex'; }
         function cerrarEncontrado(){ document.getElementById('modalEncontrado').style.display='none'; }
         async function registrarEncontrado(){
@@ -406,8 +428,6 @@ async function cerrarJornada(){
             if(!lastGpsPosition||!lastGpsPosition.lat){ mostrarToast('Sin ubicación todavía, esperá unos segundos','error'); return; }
             try{ await pgPost('puntos_ruta',{ id: uid('pr'), nombre: nombre, telefono: telefono, latitud: lastGpsPosition.lat, longitud: lastGpsPosition.lng, tipo:'encontrado', fecha: new Date().toISOString() }); hablar("Encontrado guardado"); cerrarEncontrado(); document.getElementById('encNombre').value=''; document.getElementById('encTelefono').value=''; mostrarToast('Encontrado guardado, se ve en la web'); }catch(e){ mostrarToast('Error: '+e.message,'error'); }
         }
-
-        // GPS - lógica intacta, solo cambió la base a Postgres
         function calcularDistancia(lat1, lon1, lat2, lon2){ const R=6371e3, p1=lat1*Math.PI/180, p2=lat2*Math.PI/180, dp=(lat2-lat1)*Math.PI/180, dl=(lon2-lon1)*Math.PI/180; const a=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2); return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); }
         async function cargarPuntosRutaApp(){ try{ const data=await pgGet('puntos_ruta'); if(data) puntosRutaCache=data; }catch(e){ console.error(e); } }
         function iniciarSeguimientoGPS(){
