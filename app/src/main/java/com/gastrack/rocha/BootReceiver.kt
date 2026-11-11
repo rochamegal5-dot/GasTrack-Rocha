@@ -9,7 +9,9 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
-        val prefs = context.getSharedPreferences("gastrack", Context.MODE_PRIVATE)
+        // CORREGIDO: mismo nombre que usa LocationTrackingService
+        // Antes decía "gastrack" y nunca encontraba nada
+        val prefs = context.getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
         val repartidorId = prefs.getString("repartidor_id", null)
         val wasRunning = prefs.getBoolean("was_running", false)
 
