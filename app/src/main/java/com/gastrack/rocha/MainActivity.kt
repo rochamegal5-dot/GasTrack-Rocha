@@ -1,14 +1,14 @@
 package com.gastrack.rocha
 
-import 【entity-android¦canonical_name=Android】.Manifest
-import 【entity-android¦canonical_name=Android】.content.Context
-import 【entity-android¦canonical_name=Android】.content.Intent
-import 【entity-android¦canonical_name=Android】.content.pm.PackageManager
-import 【entity-android¦canonical_name=Android】.os.Build
-import 【entity-android¦canonical_name=Android】.os.Bundle
-import 【entity-android¦canonical_name=Android】.webkit.JavascriptInterface
-import 【entity-android¦canonical_name=Android】.webkit.WebView
-import 【entity-android¦canonical_name=Android】.webkit.WebViewClient
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,18 +35,15 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { _ -> }
 
-    // 👇 PUENTE: la App Gas llama a esto con Javascript
     inner class PuenteGPS {
         @JavascriptInterface
         fun startTracking(repartidorId: String) {
             runOnUiThread { startTrackingNativo(repartidorId) }
         }
-
         @JavascriptInterface
         fun stopTracking() {
             runOnUiThread { stopTrackingNativo() }
         }
-
         @JavascriptInterface
         fun getRepartidor(): String {
             return repartidorSeleccionado
@@ -55,13 +52,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
         repartidorSeleccionado = prefs.getString("repartidor_id", "7") ?: "7"
         estaRastreando = prefs.getBoolean("was_running", false)
-
         pedirPermisos()
-
         setContent {
             MaterialTheme {
                 AndroidView(
@@ -71,8 +65,7 @@ class MainActivity : ComponentActivity() {
                             settings.domStorageEnabled = true
                             settings.databaseEnabled = true
                             settings.javaScriptCanOpenWindowsAutomatically = true
-                            // 👇 Conecta la web con el celular
-                            addJavascriptInterface(PuenteGPS(), "【entity-AndroidGPS¦canonical_name=Android】")
+                            addJavascriptInterface(PuenteGPS(), "AndroidGPS")
                             webViewClient = WebViewClient()
                             loadUrl("https://megalweb.vercel.app/app-gas")
                         }
@@ -81,7 +74,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-
         if (estaRastreando) {
             startTrackingNativo(repartidorSeleccionado)
         }
@@ -117,7 +109,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // GPS - IGUAL QUE ANTES, NO SE TOCA EL SERVICIO
     private fun startTrackingNativo(repartidorId: String) {
         repartidorSeleccionado = repartidorId
         val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
@@ -125,7 +116,6 @@ class MainActivity : ComponentActivity() {
             .putString("repartidor_id", repartidorId)
             .putBoolean("was_running", true)
             .apply()
-
         val intent = Intent(this, LocationTrackingService::class.java).apply {
             action = LocationTrackingService.ACTION_START
             putExtra(LocationTrackingService.EXTRA_REPARTIDOR_ID, repartidorId)
@@ -141,7 +131,6 @@ class MainActivity : ComponentActivity() {
     private fun stopTrackingNativo() {
         val prefs = getSharedPreferences("gastrack_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("was_running", false).apply()
-
         val intent = Intent(this, LocationTrackingService::class.java).apply {
             action = LocationTrackingService.ACTION_STOP
         }
