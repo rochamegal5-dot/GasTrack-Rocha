@@ -311,8 +311,8 @@ if (!id.isNullOrEmpty()) {
         if (wasRunning && isTracking) {
             val restartIntent = Intent(this, LocationTrackingService::class.java).apply {
                 action = ACTION_START
-                putExtra("repartidor_id", repartidorId)
-            }
+                putExtra(EXTRA_REPARTIDOR_ID, repartidorId)
+                }
             val pending = PendingIntent.getService(
                 this, 1, restartIntent,
                 PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
