@@ -9,6 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>App Gas - Repartidor</title>
     <script src="https://cdn.tailwindcss.com"></script>
+ 
     <style>
         :root { color-scheme: light; }
         html, body {
@@ -25,7 +26,7 @@
         input::placeholder { color: #9ca3af !important; }
         select option { background: #ffffff !important; color: #000000 !important; }
         .btn-action:active { transform: scale(0.95); }
-    <style>
+    
     :root { color-scheme: light; }
 
     /* 👇 FONDO GENERAL GRIS CLARO - antes era #f3f4f6 pero el celu lo pisaba a negro */
@@ -292,7 +293,8 @@
 
  
  <script>
-        const API = '/api/postgres';
+       const API = 'https://megalweb.vercel.app/api/postgres';
+         
         async function pg(table, metodo='GET', body=null, extra=''){
           let url = API + '?table=' + table + extra;
           let opt = { method: metodo, headers: { 'Content-Type': 'application/json' } };
@@ -366,7 +368,7 @@ async function cargarRepartidoresLogin(){
     });
   }
 }
-////
+
        // ============ LOGIN - ENTRAR SIN CLAVE ============
 function iniciarSesion(){
   const s=document.getElementById('selectRepartidor');
@@ -484,6 +486,7 @@ async function registrarInicioJornada(){
             await pgPost('movimientos_stock',{ id: uid('mov'), tipo_mov:'carga_camioneta', producto_id:m.producto_id, repartidor_id:repartidorActual.id, llenas:m.cantidad, vacias:0, defectuosas:0, observaciones:'Carga inicial', fecha: new Date().toISOString() });
         }
         hablar("Jornada iniciada."); localStorage.setItem('jornada_activa','true');
+        try{ if(window.AndroidGPS) window.AndroidGPS.startGPS(String(repartidorActual.id)); }catch(e){}
         // ABRIR VENTAS
         document.getElementById('pantallaInicioJornada').style.display='none';
         document.getElementById('pantallaTrabajo').style.display='block';
@@ -754,6 +757,7 @@ async function cerrarJornada(){
     localStorage.removeItem('entregado_parcial');
     window._detalleCierreActual = null;
     detenerSeguimientoGPS();
+    try{ if(window.AndroidGPS) window.AndroidGPS.stopGPS(); }catch(e){}
     hablar("Jornada finalizada.");
     document.getElementById('moduloCierre').style.display='none';
     document.getElementById('pantallaTrabajo').style.display='none';
