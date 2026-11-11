@@ -412,20 +412,45 @@ function verificarSesionPrevia(){
     }
   }
 }
-        // CORREGIDO: sincroniza stock_deposito Y deposito (la web lee deposito)
+       
+     // CORREGIDO: sincroniza stock_deposito Y deposito (la web lee deposito)
 async function ajustarStockDeposito(producto_id, dLlenas, dVacias, dDef){
-    const all=await pgGet('stock_deposito');
-    let row=all.find(s=>String(s.producto_id)===String(producto_id));
-    if(!row) row={ id: uid('dep'), producto_id: producto_id, llenas:0, vacias:0, defectuosas:0 };
-    await pgPost('stock_deposito',{ ...row, llenas:(parseInt(row.llenas)||0)+dLlenas, vacias:(parseInt(row.vacias)||0)+dVacias, defectuosas:Math.max(0,(parseInt(row.defectuosas)||0)+(dDef||0)) });
-    try{
-      const dep=await pgGet('deposito');
-      const d=dep.find(s=>String(s.producto_id)===String(producto_id));
-      if(d){
-        await pgPost('deposito',{ accion:'balance_inicial', producto_id: String(producto_id), llenas: Math.max(0,(parseInt(d.llenas)||0)+dLlenas), vacias: Math.max(0,(parseInt(d.vacias)||0)+dVacias), defectuosas: Math.max(0,(parseInt(d.defectuosas)||0)+(dDef||0)), kilos_en_uso: num(d.kilos_en_uso), kilos_restantes: num(d.kilos_restantes) });
-      }
-    }catch(e){}
+  const def = dDef || 0;
+
+  // 1. Tabla buena: deposito - acá la defectuosa se llama para_cambio
+  try{
+    const dep = await pgGet('deposito');
+    const d = dep.find(s => String(s.producto_id)===String(producto_id) || String(s.id)===String(producto_id));
+    if(d){
+      await pgPost('deposito', {
+        accion: 'balance_inicial',
+        producto_id: String(producto_id),
+        llenas: Math.max(0,(parseInt(d.llenas)||0)+dLlenas),
+        vacias: Math.max(0,(parseInt(d.vacias)||0)+dVacias),
+        // en deposito: para_cambio = defectuosas
+        para_cambio: Math.max(0,(parseInt(d.para_cambio ?? d.defectuosas)||0)+def),
+        defectuosas: Math.max(0,(parseInt(d.defectuosas ?? d.para_cambio)||0)+def),
+        kilos_en_uso: num(d.kilos_en_uso),
+        kilos_restantes: num(d.kilos_restantes)
+      });
+    }
+  }catch(e){ console.log('deposito no actualizó', e.message); }
+
+  // 2. Espejo: stock_deposito - acá sí se llama defectuosas
+  const all = await pgGet('stock_deposito');
+  let row = all.find(s => String(s.producto_id)===String(producto_id));
+  if(!row) row = { id: uid('dep'), producto_id: producto_id, llenas:0, vacias:0, defectuosas:0 };
+  await pgPost('stock_deposito', {
+    ...row,
+    llenas: Math.max(0,(parseInt(row.llenas)||0)+dLlenas),
+    vacias: Math.max(0,(parseInt(row.vacias)||0)+dVacias),
+    defectuosas: Math.max(0,(parseInt(row.defectuosas)||0)+def)
+  });
 }
+    
+
+     
+
      
         async function ajustarStockCamioneta(producto_id, dLlenas, dVacias, dDef){
             const all=await pgGet('stock_camioneta'); let row=all.find(s=>String(s.producto_id)===String(producto_id)&&String(s.repartidor_id)===String(repartidorActual.id));
@@ -460,15 +485,31 @@ async function registrarInicioJornada(){
     if(!km||parseInt(km)<=0){ mostrarToast('Ingresá KM','error'); return; }
     localStorage.setItem('km_inicio',km); localStorage.setItem('vuelto_inicio',v); localStorage.setItem('entregado_parcial','0');
     try{
-        let sd=await pgGet('stock_deposito');
-        if(!sd || sd.length===0) sd=await pgGet('deposito');
+        let sd=await pgGet('deposito');
+        if(!sd || sd.length===0) sd=await pgGet('stock_deposito');
+        
+         
+
+
+        // Busca stock aunque el id venga distinto (id, nombre, o tipo)
+function buscarStock(p){
+  const fila = sd.find(s =>
+    String(s.producto_id)===String(p.id) ||
+    String(s.id)===String(p.id) ||
+    String(s.nombre||'').toLowerCase()===String(p.nombre||'').toLowerCase() ||
+    String(s.producto||'').toLowerCase()===String(p.nombre||'').toLowerCase()
+  );
+  if(!fila) return 0;
+  // Acepta llenas, stock_llenas, cantidad, stock
+  return parseInt(fila.llenas ?? fila.stock_llenas ?? fila.cantidad ?? fila.stock ?? 0) || 0;
+}
         let valid=true, movs=[];
         let s11=0, s13=0, s45=0;
         let totalCargado=0;
         for(const p of productosCamioneta){
           const cant=parseInt(document.getElementById('stockInicial_'+p.id).value)||0;
           totalCargado += cant;
-          const disp=sd.find(s=>String(s.producto_id)===String(p.id))?.llenas||0;
+          const disp=buscarStock(p);  
           if(cant>disp){ mostrarToast('Sin stock '+p.nombre+' (hay '+disp+')','error'); valid=false; break; }
           if(cant>0) movs.push({producto_id:p.id,cantidad:cant});
           // Reconoce por tipo O por nombre (11, 13, 45)
