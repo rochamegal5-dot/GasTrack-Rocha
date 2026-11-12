@@ -435,14 +435,21 @@ async function ajustarStockDeposito(producto_id, dLlenas, dVacias, dDef){
 }
     
 
-     
+ async function ajustarStockCamioneta(producto_id, dLlenas, dVacias, dDef){
+  const all=await pgGet('stock_camioneta');
+  let row=all.find(s=>String(s.producto_id)===String(producto_id)&&String(s.repartidor_id)===String(repartidorActual.id));
+  const body={
+    repartidor_id: repartidorActual.id,
+    producto_id: producto_id,
+    llenas: Math.max(0,(parseInt(row?.llenas)||0)+dLlenas),
+    vacias: Math.max(0,(parseInt(row?.vacias)||0)+dVacias),
+    defectuosas: Math.max(0,(parseInt(row?.defectuosas)||0)+(dDef||0))
+  };
+  // Solo manda id si ya existe en la base. Si es nuevo, que la base lo genere sola.
+  if(row && row.id) body.id = row.id;
+  await pgPost('stock_camioneta', body);
+}    
 
-     
-        async function ajustarStockCamioneta(producto_id, dLlenas, dVacias, dDef){
-            const all=await pgGet('stock_camioneta'); let row=all.find(s=>String(s.producto_id)===String(producto_id)&&String(s.repartidor_id)===String(repartidorActual.id));
-            if(!row) row={ id: uid('cam'), repartidor_id: repartidorActual.id, producto_id: producto_id, llenas:0, vacias:0, defectuosas:0 };
-            await pgPost('stock_camioneta',{ ...row, llenas:Math.max(0,(parseInt(row.llenas)||0)+dLlenas), vacias:Math.max(0,(parseInt(row.vacias)||0)+dVacias), defectuosas:Math.max(0,(parseInt(row.defectuosas)||0)+(dDef||0)) });
-        }
 
        // ============ ARMA LOS CASILLEROS DE CARGA INICIAL ============
 // Cuando entrás a Inicio Jornada, acá aparecen: 11, 13, 45
