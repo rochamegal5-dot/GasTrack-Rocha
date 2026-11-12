@@ -497,13 +497,16 @@ function filtrarProductosInicio(all){
 }
 
 
-async function cargarDatosJornada(){
+ async function cargarDatosJornada(){
   const c=document.getElementById('contenedorStockInicial');
   c.innerHTML='';
   try{
     const all=await pgGet('productos');
-    // Solo 11, 13 y 45 - saca el número de adentro de "Garrafa 11kg"
+    console.log('TOTAL PRODUCTOS:', all.length, all.map(p=>p.nombre));
     productosCamioneta = filtrarProductosInicio(all);
+    if(productosCamioneta.length < 3){
+      mostrarToast('Faltan productos: hay ' + productosCamioneta.length + ' de 3','error');
+    }
     productosCamioneta.forEach(p=>{
       const d=document.createElement('div');
       d.className='p-2 rounded-lg text-center';
@@ -511,10 +514,10 @@ async function cargarDatosJornada(){
       d.innerHTML='<label class="block text-xs font-bold mb-1" style="color:#1f2937;">'+p.nombre+'</label><input type="number" id="stockInicial_'+p.id+'" min="0" value="0" class="block w-full px-2 py-2 border-2 rounded-lg text-center font-black text-lg" style="background:#ffffff !important; color:#000000 !important; border-color:#d1d5db;">';
       c.appendChild(d);
     });
-  }catch(e){}
-}
-
-
+  }catch(e){
+    mostrarToast('Error cargando productos: ' + e.message,'error');
+  }
+}    
 
    
    // ============ BOTÓN EMPEZAR EL DÍA ============
@@ -560,7 +563,7 @@ function buscarStock(p){
         }
         if(!valid) return;
         if(totalCargado===0){ mostrarToast('Cargá al menos 1 garrafa','error'); return; }
-        await pgPost('jornadas',{ id: uid('jor'), repartidor_id: repartidorActual.id, fecha: hoyUY(), hora_salida: new Date().toLocaleTimeString('es-UY'), km_inicio: parseInt(km), stock_11_inicial: s11, stock_13_inicial: s13, stock_45_inicial: s45, cambio_inicial: num(v), estado:'abierta' });
+        await pgPost('jornadas',{ id: uid('jor'), repartidor_id: repartidorActual.id, fecha: hoyUY(), km_inicio: parseInt(km), stock_11_inicial: s11, stock_13_inicial: s13, stock_45_inicial: s45, cambio_inicial: num(v), estado:'abierta' });
         for(const m of movs){
             await ajustarStockDeposito(m.producto_id,-m.cantidad,0);
             await ajustarStockCamioneta(m.producto_id,m.cantidad,0,0);
@@ -813,7 +816,7 @@ async function realizarCierreParcial(tipo){
     const m=prompt('¿Cuánto entregás? - '+nombreTipo+'\n(Disponible: $'+a.toLocaleString('es-UY')+')');
     if(m&&!isNaN(parseFloat(m))&&parseFloat(m)>0){
         if(parseFloat(m)>a){ mostrarToast('No podés entregar más de $'+a.toLocaleString('es-UY'),'error'); return; }
-        localStorage.setItem('entregado_parcial', (num(localStorage.getItem('entregado_parcial'))+parseFloat(m)).toString());
+               localStorage.setItem('entregado_parcial', (num(localStorage.getItem('entregado_parcial'))+parseFloat(m)).toString());
         try{
           await pgPost('cierres',{ id: uid('cie'), repartidor_id: repartidorActual.id, tipo: tipo||'parcial', monto: parseFloat(m), detalle: window._detalleCierreActual?window._detalleCierreActual.detalleHtml:'', total_vendido: window._detalleCierreActual?window._detalleCierreActual.total:0, efectivo: window._detalleCierreActual?window._detalleCierreActual.efectivo:0, transferencia: window._detalleCierreActual?window._detalleCierreActual.transferencia:0, fecha: new Date().toISOString() });
         }catch(e){}
@@ -821,7 +824,9 @@ async function realizarCierreParcial(tipo){
         mostrarPantallaCierre();
     }
 }
-     
+        
+        
+ 
      // ============ CERRAR JORNADA FINAL ============
 async function cerrarJornada(){
     if(!confirm('¿CERRAR JORNADA FINAL?')) return;
@@ -829,10 +834,14 @@ async function cerrarJornada(){
     if(!window._detalleCierreActual) await mostrarPantallaCierre();
     try{
       await pgPost('cierres',{ id: uid('cie'), repartidor_id: repartidorActual.id, tipo:'final', monto: window._detalleCierreActual?window._detalleCierreActual.aEntregar:0, detalle: window._detalleCierreActual?window._detalleCierreActual.detalleHtml:'', total_vendido: window._detalleCierreActual?window._detalleCierreActual.total:0, efectivo: window._detalleCierreActual?window._detalleCierreActual.efectivo:0, transferencia: window._detalleCierreActual?window._detalleCierreActual.transferencia:0, fecha: new Date().toISOString() });
+    }catch(e){ console.log('cierres falló', e.message); }
+    try{
       const all=await pgGet('jornadas');
       const j=all.find(x=>String(x.repartidor_id)===String(repartidorActual.id)&&x.estado==='abierta');
-      if(j) await pgPost('jornadas',{ ...j, estado:'cerrada' });  
-      }catch(e){}
+      if(j) await pgPost('jornadas',{ ...j, estado:'cerrada' });
+    }catch(e){ mostrarToast('No se pudo cerrar jornada: '+e.message,'error'); }
+
+  
     // Devuelve todo lo que quedó en la camioneta al depósito
 try{
   const sc = await pgGet('stock_camioneta');
