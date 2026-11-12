@@ -308,7 +308,7 @@
      
         async function pgGet(table, extra=''){ const d = await pg(table,'GET',null,extra); return Array.isArray(d)?d:[]; }
         async function pgPost(table, body){ return await pg(table,'POST',body); }
-        function uid(p){ return p+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,6); }
+        function uid(p){ return crypto.randomUUID(); }
         function hoyUY(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
         function esHoy(fecha){ if(!fecha) return false; const s=String(fecha); return s.slice(0,10)===hoyUY(); }
         function num(v){ const n=parseFloat(v); return isNaN(n)?0:n; }
@@ -433,7 +433,8 @@ async function ajustarStockDeposito(producto_id, dLlenas, dVacias, dDef){
     }
   }catch(e){ console.log('deposito no actualizó', e.message); }
 }
-    
+
+
 
  async function ajustarStockCamioneta(producto_id, dLlenas, dVacias, dDef){
   const all=await pgGet('stock_camioneta');
@@ -445,18 +446,56 @@ async function ajustarStockDeposito(producto_id, dLlenas, dVacias, dDef){
     vacias: Math.max(0,(parseInt(row?.vacias)||0)+dVacias),
     defectuosas: Math.max(0,(parseInt(row?.defectuosas)||0)+(dDef||0))
   };
-  // Solo manda id si ya existe en la base. Si es nuevo, que la base lo genere sola.
+  // stock_camioneta.id es uuid NOT NULL: si ya existe usa ese, si es nuevo genera un uuid válido
   if(row && row.id) body.id = row.id;
+  else body.id = crypto.randomUUID();
   await pgPost('stock_camioneta', body);
 }    
 
 
-       // ============ ARMA LOS CASILLEROS DE CARGA INICIAL ============
-// Cuando entrás a Inicio Jornada, acá aparecen: 11, 13, 45
+// Solo Garrafa 11, Garrafa 13, Tubo 45. El producto es el mismo, no importa si es Comercio, Particular o Mides.
 function kilosDe(p){
-  const m = String(p.nombre||'').match(/(\d+(?:[.,]\d+)?)/);
-  return m ? parseFloat(m[1].replace(',','.')) : NaN;
+  // 1. Campos numéricos exactos: 11 tiene que ser 11, no "contiene 11"
+  for(const c of [p.kilos, p.peso, p.peso_kg, p.capacidad]){
+    const n = Number(c);
+    if(n === 11 || n === 13 || n === 45) return n;
+  }
+  // 2. Nombre: número pegado a kg. Ej: "Garrafa 13kg", "Garrafa de 13 kg", "Pack 2x Garrafa 13kg"
+  //    Busca el último número antes de "kg", no el primero del nombre (por eso el Pack 2x no daba 2)
+  const texto = String(p.nombre||'') + ' ' + String(p.descripcion||'');
+  const m = texto.match(/(\d+(?:[.,]\d+)?)\s*kg/gi);
+  if(m){
+    const ultimo = m[m.length-1];
+    const n = parseFloat(ultimo.replace(/[^0-9.,]/g,'').replace(',','.'));
+    if(n === 11 || n === 13 || n === 45) return n;
+  }
+  // 3. Palabras, solo en nombre/descripción, nunca en código/UUID
+  const t = texto.toLowerCase();
+  if(t.includes('trece')) return 13;
+  if(t.includes('once')) return 11;
+  if(t.includes('cuarenta')) return 45;
+  return NaN;
 }
+
+function esProductoInicio(p){
+  const n = String(p.nombre||'').toLowerCase();
+  const esGarrafaOTubo = n.includes('garrafa') || n.includes('tubo');
+  if(!esGarrafaOTubo) return false;
+  return [11,13,45].includes(kilosDe(p));
+}
+
+// Devuelve exactamente 3, en orden 11, 13, 45. Si hay duplicados por Mides/Comercio, se queda con el primero.
+function filtrarProductosInicio(all){
+  const porKilo = new Map();
+  all.filter(p => esProductoInicio(p)).forEach(p => {
+    const k = kilosDe(p);
+    if(!porKilo.has(k)) porKilo.set(k, p);
+  });
+  const lista = [11,13,45].map(k => porKilo.get(k)).filter(Boolean);
+  console.log('PRODUCTOS INICIO:', lista.map(x => x.nombre + ' -> ' + kilosDe(x) + 'kg'));
+  return lista;
+}
+
 
 async function cargarDatosJornada(){
   const c=document.getElementById('contenedorStockInicial');
@@ -464,7 +503,7 @@ async function cargarDatosJornada(){
   try{
     const all=await pgGet('productos');
     // Solo 11, 13 y 45 - saca el número de adentro de "Garrafa 11kg"
-    productosCamioneta = all.filter(p => [11,13,45].includes(kilosDe(p)));
+    productosCamioneta = filtrarProductosInicio(all);
     productosCamioneta.forEach(p=>{
       const d=document.createElement('div');
       d.className='p-2 rounded-lg text-center';
@@ -539,7 +578,8 @@ function buscarStock(p){
 }
      
       async function inicializarPantallaTrabajo(){
-    if(productosCamioneta.length===0){ const all=await pgGet('productos');productosCamioneta=all.filter(p=> [11,13,45].includes(kilosDe(p))); }
+     
+    if(productosCamioneta.length===0){ const all=await pgGet('productos');productosCamioneta=filtrarProductosInicio(all);}
   await cargarStockCamionetaUI();
   await cargarSelectsVentas();
   iniciarSeguimientoGPS();
@@ -791,8 +831,19 @@ async function cerrarJornada(){
       await pgPost('cierres',{ id: uid('cie'), repartidor_id: repartidorActual.id, tipo:'final', monto: window._detalleCierreActual?window._detalleCierreActual.aEntregar:0, detalle: window._detalleCierreActual?window._detalleCierreActual.detalleHtml:'', total_vendido: window._detalleCierreActual?window._detalleCierreActual.total:0, efectivo: window._detalleCierreActual?window._detalleCierreActual.efectivo:0, transferencia: window._detalleCierreActual?window._detalleCierreActual.transferencia:0, fecha: new Date().toISOString() });
       const all=await pgGet('jornadas');
       const j=all.find(x=>String(x.repartidor_id)===String(repartidorActual.id)&&x.estado==='abierta');
-      if(j) await pgPost('jornadas',{ ...j, estado:'cerrada', hora_cierre: new Date().toLocaleTimeString('es-UY') });
-    }catch(e){}
+      if(j) await pgPost('jornadas',{ ...j, estado:'cerrada' });  
+      }catch(e){}
+    // Devuelve todo lo que quedó en la camioneta al depósito
+try{
+  const sc = await pgGet('stock_camioneta');
+  const mio = sc.filter(x => String(x.repartidor_id)===String(repartidorActual.id));
+  for(const r of mio){
+    if((parseInt(r.llenas)||0) > 0 || (parseInt(r.vacias)||0) > 0 || (parseInt(r.defectuosas)||0) > 0){
+      await ajustarStockDeposito(r.producto_id, parseInt(r.llenas)||0, parseInt(r.vacias)||0, parseInt(r.defectuosas)||0);
+      await ajustarStockCamioneta(r.producto_id, -(parseInt(r.llenas)||0), -(parseInt(r.vacias)||0), -(parseInt(r.defectuosas)||0));
+    }
+  }
+}catch(e){}
     localStorage.removeItem('jornada_activa');
     localStorage.removeItem('km_inicio');
     localStorage.removeItem('vuelto_inicio');
